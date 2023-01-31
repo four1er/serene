@@ -70,7 +70,7 @@ private:
   SereneContext &ctx;
 
   llvm::StringRef ns;
-  llvm::Optional<llvm::StringRef> filename;
+  std::optional<llvm::StringRef> filename;
 
   const char *currentChar = NULL;
 
@@ -110,9 +110,9 @@ private:
 
 public:
   Reader(SereneContext &ctx, llvm::StringRef buf, llvm::StringRef ns,
-         llvm::Optional<llvm::StringRef> filename);
+         std::optional<llvm::StringRef> filename);
   Reader(SereneContext &ctx, llvm::MemoryBufferRef buf, llvm::StringRef ns,
-         llvm::Optional<llvm::StringRef> filename);
+         std::optional<llvm::StringRef> filename);
 
   // void setInput(const llvm::StringRef string);
 
@@ -127,11 +127,11 @@ public:
 /// which may contains an AST or an `llvm::Error`
 SERENE_EXPORT exprs::MaybeAst read(SereneContext &ctx, llvm::StringRef input,
                                    llvm::StringRef ns,
-                                   llvm::Optional<llvm::StringRef> filename);
+                                   std::optional<llvm::StringRef> filename);
 SERENE_EXPORT exprs::MaybeAst read(SereneContext &ctx,
                                    llvm::MemoryBufferRef input,
                                    llvm::StringRef ns,
-                                   llvm::Optional<llvm::StringRef> filename);
+                                   std::optional<llvm::StringRef> filename);
 } // namespace serene::reader
 
 #endif

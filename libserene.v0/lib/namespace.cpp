@@ -42,7 +42,7 @@ using namespace llvm;
 namespace serene {
 
 Namespace::Namespace(SereneContext &ctx, llvm::StringRef ns_name,
-                     llvm::Optional<llvm::StringRef> filename)
+                     std::optional<llvm::StringRef> filename)
     : ctx(ctx), name(ns_name) {
   if (filename.hasValue()) {
     this->filename.emplace(filename.getValue().str());
@@ -119,7 +119,7 @@ MaybeModuleOp Namespace::generate(unsigned offset) {
 
   // TODO: Fix the unknown location by pointing to the `ns` form
   auto module = mlir::ModuleOp::create(builder.getUnknownLoc(),
-                                       llvm::Optional<llvm::StringRef>(name));
+                                       std::optional<llvm::StringRef>(name));
 
   auto treeSize = getTree().size();
 
@@ -211,7 +211,7 @@ MaybeModule Namespace::compileToLLVMFromOffset(unsigned offset) {
 };
 
 NSPtr Namespace::make(SereneContext &ctx, llvm::StringRef name,
-                      llvm::Optional<llvm::StringRef> filename) {
+                      std::optional<llvm::StringRef> filename) {
   return std::make_shared<Namespace>(ctx, name, filename);
 };
 

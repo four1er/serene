@@ -35,7 +35,7 @@ struct Location {
   /// a namespace in hand
   llvm::StringRef ns;
 
-  llvm::Optional<llvm::StringRef> filename = llvm::None;
+  std::optional<llvm::StringRef> filename = std::nullopt;
   /// A pointer to the character that this location is pointing to
   /// it the input buffer
   const char *c = nullptr;
@@ -51,7 +51,7 @@ struct Location {
 
   Location() = default;
   Location(llvm::StringRef ns,
-           llvm::Optional<llvm::StringRef> fname = llvm::None,
+           std::optional<llvm::StringRef> fname = std::nullopt,
            const char *c = nullptr, unsigned short int line = 0,
            unsigned short int col = 0, bool knownLocation = true)
       : ns(ns), filename(fname), c(c), line(line), col(col),
@@ -63,7 +63,7 @@ struct Location {
 
   /// Returns an unknown location for the given \p ns.
   static Location UnknownLocation(llvm::StringRef ns) {
-    return Location(ns, llvm::None, nullptr, 0, 0, false);
+    return Location(ns, std::nullopt, nullptr, 0, 0, false);
   }
 };
 

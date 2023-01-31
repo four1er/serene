@@ -55,7 +55,7 @@ public:
 
   Ast from(uint index);
 
-  llvm::Optional<Expression *> at(uint index);
+  std::optional<Expression *> at(uint index);
 
   /// Return an iterator to be used with the `for` loop. It's implicitly called
   /// by the for loop.

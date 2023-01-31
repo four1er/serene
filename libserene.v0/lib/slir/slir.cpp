@@ -21,7 +21,7 @@
 namespace serene {
 namespace slir {
 
-llvm::Optional<llvm::orc::ThreadSafeModule>
+std::optional<llvm::orc::ThreadSafeModule>
 compileToLLVMIR(serene::SereneContext &ctx, mlir::ModuleOp &module) {
 
   auto llvmContext = serene::SereneContext::genLLVMContext();

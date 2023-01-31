@@ -95,7 +95,7 @@ SERENE_EXPORT exprs::MaybeAst read(SereneContext &ctx, std::string &input) {
   auto filename =
       !currentNS.filename.hasValue()
           ? llvm::None
-          : llvm::Optional<llvm::StringRef>(currentNS.filename.getValue());
+          : std::optional<llvm::StringRef>(currentNS.filename.getValue());
 
   return reader::read(ctx, input, currentNS.name, filename);
 };

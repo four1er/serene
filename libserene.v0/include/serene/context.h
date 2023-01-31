@@ -165,7 +165,7 @@ public:
 
     // We need to create one empty namespace, so that the JIT can
     // start it's operation.
-    auto ns = Namespace::make(*this, DEFAULT_NS_NAME, llvm::None);
+    auto ns = Namespace::make(*this, DEFAULT_NS_NAME, std::nullopt);
 
     insertNS(ns);
     currentNS = ns->name;
@@ -186,7 +186,7 @@ public:
   /// Create an empty namespace with the given \p name and optional \p filename
   /// and then insert it into the context
   NSPtr makeNamespace(llvm::StringRef name,
-                      llvm::Optional<llvm::StringRef> filename);
+                      std::optional<llvm::StringRef> filename);
 
   /// Read a namespace with the given \p name and returns a share pointer
   /// to the name or an Error.

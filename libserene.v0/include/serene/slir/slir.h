@@ -31,7 +31,7 @@ namespace slir {
 // std::unique_ptr<llvm::Module> compileToLLVMIR(serene::SereneContext &ctx,
 //                                               mlir::ModuleOp &module);
 
-llvm::Optional<llvm::orc::ThreadSafeModule>
+std::optional<llvm::orc::ThreadSafeModule>
 compileToLLVMIR(serene::SereneContext &ctx, mlir::ModuleOp &module);
 } // namespace slir
 } // namespace serene

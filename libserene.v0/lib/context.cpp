@@ -91,7 +91,7 @@ int SereneContext::getOptimizatioLevel() {
 }
 
 NSPtr SereneContext::makeNamespace(llvm::StringRef name,
-                                   llvm::Optional<llvm::StringRef> filename) {
+                                   std::optional<llvm::StringRef> filename) {
   auto ns = Namespace::make(*this, name, filename);
 
   if (ns != nullptr) {

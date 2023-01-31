@@ -106,7 +106,7 @@ void decLocation(Location &loc, const char *c) {
 }
 
 Reader::Reader(SereneContext &ctx, llvm::StringRef buffer, llvm::StringRef ns,
-               llvm::Optional<llvm::StringRef> filename)
+               std::optional<llvm::StringRef> filename)
     : ctx(ctx), ns(ns), filename(filename), buf(buffer),
       currentLocation(Location(ns, filename)) {
   UNUSED(this->ctx);
@@ -118,7 +118,7 @@ Reader::Reader(SereneContext &ctx, llvm::StringRef buffer, llvm::StringRef ns,
 };
 
 Reader::Reader(SereneContext &ctx, llvm::MemoryBufferRef buffer,
-               llvm::StringRef ns, llvm::Optional<llvm::StringRef> filename)
+               llvm::StringRef ns, std::optional<llvm::StringRef> filename)
     : Reader(ctx, buffer.getBuffer(), ns, filename){};
 
 Reader::~Reader() { READER_LOG("Destroying the reader"); }
@@ -420,7 +420,7 @@ exprs::MaybeAst Reader::read() {
 
 exprs::MaybeAst read(SereneContext &ctx, const llvm::StringRef input,
                      llvm::StringRef ns,
-                     llvm::Optional<llvm::StringRef> filename) {
+                     std::optional<llvm::StringRef> filename) {
   reader::Reader r(ctx, input, ns, filename);
   auto ast = r.read();
   return ast;
@@ -428,7 +428,7 @@ exprs::MaybeAst read(SereneContext &ctx, const llvm::StringRef input,
 
 exprs::MaybeAst read(SereneContext &ctx, const llvm::MemoryBufferRef input,
                      llvm::StringRef ns,
-                     llvm::Optional<llvm::StringRef> filename) {
+                     std::optional<llvm::StringRef> filename) {
   reader::Reader r(ctx, input, ns, filename);
 
   auto ast = r.read();

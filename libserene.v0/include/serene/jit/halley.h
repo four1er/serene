@@ -121,7 +121,7 @@ public:
   /// pointers to the actual arguments.
   // llvm::Error
   // invokePacked(llvm::StringRef name,
-  //              llvm::MutableArrayRef<void *> args = llvm::None) const;
+  //              llvm::MutableArrayRef<void *> args = std::nullopt) const;
 
   /// Trait that defines how a given type is passed to the JIT code. This
   /// defaults to passing the address but can be specialized.

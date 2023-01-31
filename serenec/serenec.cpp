@@ -151,7 +151,7 @@ static std::string banner =
 //   const auto *features = "";
 
 //   llvm::TargetOptions opt;
-//   auto rm = llvm::Optional<llvm::Reloc::Model>();
+//   auto rm = std::optional<llvm::Reloc::Model>();
 //   auto *targetMachinePtr =
 //       target->createTargetMachine(ctx.targetTriple, cpu, features, opt, rm);
 //   auto targetMachine =

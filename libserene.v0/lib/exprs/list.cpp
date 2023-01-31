@@ -97,12 +97,12 @@ std::vector<Node>::iterator List::end() { return elements.end(); }
 
 size_t List::count() const { return elements.size(); }
 
-llvm::Optional<Expression *> List::at(uint index) {
+std::optional<Expression *> List::at(uint index) {
   if (index >= elements.size()) {
     return llvm::None;
   }
 
-  return llvm::Optional<Expression *>(this->elements[index].get());
+  return std::optional<Expression *>(this->elements[index].get());
 }
 
 Ast List::from(uint index) {

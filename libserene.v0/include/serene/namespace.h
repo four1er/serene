@@ -78,8 +78,8 @@ using Ast  = std::vector<Node>;
 
 using NSPtr                = std::shared_ptr<Namespace>;
 using MaybeNS              = llvm::Expected<NSPtr>;
-using MaybeModule          = llvm::Optional<llvm::orc::ThreadSafeModule>;
-using MaybeModuleOp        = llvm::Optional<mlir::OwningOpRef<mlir::ModuleOp>>;
+using MaybeModule          = std::optional<llvm::orc::ThreadSafeModule>;
+using MaybeModuleOp        = std::optional<mlir::OwningOpRef<mlir::ModuleOp>>;
 using SemanticEnv          = Environment<exprs::Node>;
 using SemanticEnvPtr       = std::unique_ptr<SemanticEnv>;
 using SemanticEnvironments = std::vector<SemanticEnvPtr>;
@@ -111,15 +111,15 @@ private:
 
 public:
   std::string name;
-  llvm::Optional<std::string> filename;
+  std::optional<std::string> filename;
 
   /// Create a naw namespace with the given `name` and optional `filename` and
   /// return a shared pointer to it in the given Serene context.
   static NSPtr make(SereneContext &ctx, llvm::StringRef name,
-                    llvm::Optional<llvm::StringRef> filename);
+                    std::optional<llvm::StringRef> filename);
 
   Namespace(SereneContext &ctx, llvm::StringRef ns_name,
-            llvm::Optional<llvm::StringRef> filename);
+            std::optional<llvm::StringRef> filename);
 
   /// Create a new environment with the give \p parent as the parent,
   /// push the environment to the internal environment storage and

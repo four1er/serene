@@ -102,7 +102,7 @@ MaybeNS SourceMgr::readNamespace(SereneContext &ctx, std::string name,
 
   // Read the content of the buffer by passing it the reader
   auto maybeAst = reader::read(ctx, buf->getBuffer(), name,
-                               llvm::Optional(llvm::StringRef(importedFile)));
+                               std::optional(llvm::StringRef(importedFile)));
 
   if (!maybeAst) {
     SMGR_LOG("Couldn't Read namespace: " + name);
@@ -111,7 +111,7 @@ MaybeNS SourceMgr::readNamespace(SereneContext &ctx, std::string name,
 
   // Create the NS and set the AST
   auto ns =
-      ctx.makeNamespace(name, llvm::Optional(llvm::StringRef(importedFile)));
+      ctx.makeNamespace(name, std::optional(llvm::StringRef(importedFile)));
 
   if (auto errs = ns->addTree(*maybeAst)) {
     SMGR_LOG("Couldn't set the AST for namespace: " + name);

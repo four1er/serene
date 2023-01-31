@@ -52,8 +52,8 @@ class TypeConverter : public mlir::TypeConverter {
 
   using mlir::TypeConverter::convertType;
 
-  using MaybeType   = llvm::Optional<mlir::Type>;
-  using MaybeValue  = llvm::Optional<mlir::Value>;
+  using MaybeType   = std::optional<mlir::Type>;
+  using MaybeValue  = std::optional<mlir::Value>;
   using ConverterFn = std::function<MaybeType(mlir::Type)>;
 
   std::function<MaybeValue(mlir::OpBuilder &, SymbolType, mlir::ValueRange,

@@ -101,7 +101,7 @@ using MaybeJitAddress    = llvm::Expected<JitWrappedAddress>;
 using Dylib              = llvm::orc::JITDylib;
 using DylibPtr           = Dylib *;
 using MaybeDylibPtr      = llvm::Expected<DylibPtr>;
-using MaybeNSFileTypeArr = llvm::Optional<llvm::ArrayRef<fs::NSFileType>>;
+using MaybeNSFileTypeArr = std::optional<llvm::ArrayRef<fs::NSFileType>>;
 
 /// A simple object cache following Lang's LLJITWithObjectCache example and
 /// MLIR's SimpelObjectCache.
@@ -227,7 +227,7 @@ public:
   /// pointers to the actual arguments.
   llvm::Error
   invokePacked(const types::Symbol &name,
-               llvm::MutableArrayRef<void *> args = llvm::None) const;
+               llvm::MutableArrayRef<void *> args = std::nullopt) const;
 
   llvm::Error loadModule(const char *nsName, const char *file);
   void dumpToObjectFile(llvm::StringRef filename);

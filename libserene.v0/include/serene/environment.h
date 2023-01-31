@@ -43,7 +43,7 @@ public:
   Environment(Environment *parent) : parent(parent){};
 
   /// Look up the given `key` in the environment and return it.
-  llvm::Optional<V> lookup(llvm::StringRef key) {
+  std::optional<V> lookup(llvm::StringRef key) {
     if (auto value = pairs.lookup(key)) {
       return value;
     }
@@ -52,7 +52,7 @@ public:
       return parent->lookup(key);
     }
 
-    return llvm::None;
+    return std::nullopt;
   };
 
   /// Insert the given `key` with the given `value` into the storage. This
