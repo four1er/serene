@@ -1,0 +1,105 @@
+# Serene Programming Language
+#
+# Copyright (c) 2019-2022 Sameer Rahmani <lxsameer@gnu.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# -----------------------------------------------------------------------------
+# Commentary
+# -----------------------------------------------------------------------------
+# This file contains bunch of variables that you can tune to fit you needs. The
+# `builder` script and `bin/activate` use this file to operate.
+#
+# Modify the `CONFIG VARS` the way you see fit or just use the default.
+
+# -----------------------------------------------------------------------------
+# Helper functions
+# -----------------------------------------------------------------------------
+
+function _push() {
+    pushd "$1" > /dev/null || return
+}
+
+
+function _pop() {
+    popd > /dev/null || return
+}
+
+function get_version() {
+    _push "$1"
+    git describe
+    _pop
+}
+
+# -----------------------------------------------------------------------------
+# CONFIG VARS
+# -----------------------------------------------------------------------------
+
+# By default Clang is the compiler that we use and support. But you may use
+# whatever you want. But just be aware of the fact that we might not be able
+# to help you in case of any issue.
+CC="${CC:-clang}"
+CXX="${CXX:-clang++}"
+
+# The target architectures that we want to build Serene in and also we want
+# serene to support. We use this variable when we're building the llvm
+TARGET_ARCHS="X86;AArch64;AMDGPU;ARM;RISCV;WebAssembly"
+
+# The repository to push/pull packages to/from.
+DEV_HEROES="https://beta.devheroes.codes"
+BUILD_DIR_NAME="build"
+
+# -----------------------------------------------------------------------------
+# INTERNAL VARS
+# -----------------------------------------------------------------------------
+# You don't have any business in this section. Don't change any thing here
+# unless you really know what you're doing
+ME=$(cd "$(dirname "$0")/." >/dev/null 2>&1 ; pwd -P)
+
+BUILD_DIR="$ME/$BUILD_DIR_NAME"
+
+LLVM_DIR_NAME="llvm"
+LLVM_DIR="$ME/deps/llvm-project"
+LLVM_SOURCE_DIR="$LLVM_DIR/$LLVM_DIR_NAME"
+LLVM_BUILD_DIR="$BUILD_DIR/${LLVM_DIR_NAME}_build"
+LLVM_INSTALL_DIR="$BUILD_DIR/$LLVM_DIR_NAME.$(get_version $LLVM_DIR)"
+
+BDWGC_DIR_NAME="bdwgc"
+BDWGC_SOURCE_DIR="$ME/deps/$BDWGC_DIR_NAME"
+BDWGC_BUILD_DIR="$BUILD_DIR/${BDWGC_DIR_NAME}_build"
+BDWGC_INSTALL_DIR="$BUILD_DIR/$BDWGC_DIR_NAME.$(get_version $BDWGC_SOURCE_DIR)"
+# This is a variable that cmake expects
+BDWgc_DIR="$BDWGC_INSTALL_DIR/lib64/cmake/bdwgc"
+
+IWYU_DIR="$ME/deps/include-what-you-use"
+
+ZSTD_CLI="zstd --ultra -22 -T$(nproc)"
+
+# -----------------------------------------------------------------------------
+# Exports
+# -----------------------------------------------------------------------------
+export ME
+export TARGET_ARCHS
+export DEV_HEROES
+
+export BUILD_DIR
+export LLVM_DIR_NAME
+export LLVM_DIR
+export LLVM_SOURCE_DIR
+export LLVM_BUILD_DIR
+export LLVM_INSTALL_DIR
+export BDWGC_DIR_NAME
+export BDWGC_DIR
+export BDWGC_BUILD_DIR
+export BDWGC_INSTALL_DIR
+export BDWgc_DIR
