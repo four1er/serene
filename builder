@@ -175,8 +175,7 @@ function serve-docs() { ## Serve the docs directory from build dir
 }
 
 function clean() { ## Cleans up the source dir and removes the build
-    rm -rf "$BUILD_DIR"
-    rm -rf "$(find . -iname '*~')"
+    git clean -dxf
 }
 
 function run() { ## Runs `serenec` and passes all the given aruguments to it

@@ -22,24 +22,8 @@
 #
 # Modify the `CONFIG VARS` the way you see fit or just use the default.
 
-# -----------------------------------------------------------------------------
-# Helper functions
-# -----------------------------------------------------------------------------
-
-function _push() {
-    pushd "$1" > /dev/null || return
-}
-
-
-function _pop() {
-    popd > /dev/null || return
-}
-
-function get_version() {
-    _push "$1"
-    git describe
-    _pop
-}
+ME=$(cd "$(dirname "$0")/." >/dev/null 2>&1 ; pwd -P)
+source "$ME/scripts/utils.sh"
 
 # -----------------------------------------------------------------------------
 # CONFIG VARS
@@ -58,26 +42,28 @@ TARGET_ARCHS="X86;AArch64;AMDGPU;ARM;RISCV;WebAssembly"
 # The repository to push/pull packages to/from.
 DEV_HEROES="https://beta.devheroes.codes"
 BUILD_DIR_NAME="build"
+DEPS_BUILD_DIR_NAME=".env"
 
 # -----------------------------------------------------------------------------
 # INTERNAL VARS
 # -----------------------------------------------------------------------------
 # You don't have any business in this section. Don't change any thing here
 # unless you really know what you're doing
-ME=$(cd "$(dirname "$0")/." >/dev/null 2>&1 ; pwd -P)
+
 
 BUILD_DIR="$ME/$BUILD_DIR_NAME"
+DEPS_BUILD_DIR="$ME/$DEPS_BUILD_DIR_NAME"
 
 LLVM_DIR_NAME="llvm"
 LLVM_DIR="$ME/deps/llvm-project"
 LLVM_SOURCE_DIR="$LLVM_DIR/$LLVM_DIR_NAME"
-LLVM_BUILD_DIR="$BUILD_DIR/${LLVM_DIR_NAME}_build"
-LLVM_INSTALL_DIR="$BUILD_DIR/$LLVM_DIR_NAME.$(get_version $LLVM_DIR)"
+LLVM_BUILD_DIR="$DEPS_BUILD_DIR/${LLVM_DIR_NAME}_build"
+LLVM_INSTALL_DIR="$DEPS_BUILD_DIR/$LLVM_DIR_NAME.$(get_version $LLVM_DIR)"
 
 BDWGC_DIR_NAME="bdwgc"
 BDWGC_SOURCE_DIR="$ME/deps/$BDWGC_DIR_NAME"
-BDWGC_BUILD_DIR="$BUILD_DIR/${BDWGC_DIR_NAME}_build"
-BDWGC_INSTALL_DIR="$BUILD_DIR/$BDWGC_DIR_NAME.$(get_version $BDWGC_SOURCE_DIR)"
+BDWGC_BUILD_DIR="$DEPS_BUILD_DIR/${BDWGC_DIR_NAME}_build"
+BDWGC_INSTALL_DIR="$DEPS_BUILD_DIR/$BDWGC_DIR_NAME.$(get_version $BDWGC_SOURCE_DIR)"
 # This is a variable that cmake expects
 BDWgc_DIR="$BDWGC_INSTALL_DIR/lib64/cmake/bdwgc"
 

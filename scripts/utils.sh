@@ -54,3 +54,18 @@ function yes_or_no {
         esac
     done
 }
+
+function _push() {
+    pushd "$1" > /dev/null || return
+}
+
+
+function _pop() {
+    popd > /dev/null || return
+}
+
+function get_version() {
+    _push "$1"
+    git describe
+    _pop
+}
