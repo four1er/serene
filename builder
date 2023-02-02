@@ -38,7 +38,6 @@
 #
 # $ VERBOSE=ON ./builder build/
 #
-
 set -e
 
 # -----------------------------------------------------------------------------
@@ -47,11 +46,13 @@ set -e
 
 command=$1
 VERSION="0.7.0"
+
+ME=$(cd "$(dirname "$0")/." >/dev/null 2>&1 ; pwd -P)
+
+source "$ME/config"
+
 LLVM_VERSION="11"
 
-# Serene subprojects. We use this array to run common tasks on all the projects
-# like running the test cases
-PROJECTS=(libserene serenec serene-repl serene-tblgen)
 
 CC=$(which clang)
 CXX=$(which clang++)
@@ -71,7 +72,7 @@ export LDFLAGS="-fuse-ld=lld"
 # root of the source tree
 ROOT_DIR=$(pwd)
 BUILD_DIR=$ROOT_DIR/build
-ME=$(cd "$(dirname "$0")/." >/dev/null 2>&1 ; pwd -P)
+
 
 CMAKEARGS_DEBUG=("-DCMAKE_BUILD_TYPE=Debug")
 CMAKEARGS=("-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
@@ -82,6 +83,9 @@ source "$ME/scripts/utils.sh"
 
 # shellcheck source=./scripts/devfs.sh
 source "$ME/scripts/devfs.sh"
+
+# shellcheck source=./scripts/deps.sh
+source "$ME/scripts/deps.sh"
 
 
 # -----------------------------------------------------------------------------
@@ -122,6 +126,11 @@ function build-gen() {
 # -----------------------------------------------------------------------------
 # Subcomaands
 # -----------------------------------------------------------------------------
+
+function deps() { ## Manage the dependencies
+    manage_dependencies "$@"
+}
+
 function compile() { ## Compiles the project using the generated build scripts
     pushed_build
     cmake --build .

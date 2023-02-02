@@ -20,8 +20,11 @@
 # -----------------------------------------------------------------------------
 # This file contains some functions to build, pack and distribute the
 # dependencies
+#
+# IMPORTANT: ENV Vars comes from the `config` file
 
-source ./utils.sh
+# shellcheck source=./deps.sh
+source ./scripts/utils.sh
 
 function build_toolchain() { ## Build LLVM and the toolchain
     local version
@@ -88,6 +91,7 @@ function push_toolchain() { ## Push the toolchain to the package repository
     info "Pushing the toolchain version '$version'..."
     _push "$DEPS_BUILD_DIR"
     http "$LLVM_DIR_NAME" "$version"
+    echo ""
     info "Done"
     _pop
 }
@@ -164,6 +168,70 @@ function push_bdwgc() { ## Push the BDWGC package to the package repository
     info "Pushing the BDWGC package version '$version'..."
     _push "$DEPS_BUILD_DIR"
     http "$BDWGC_DIR_NAME" "$version"
+    echo ""
     info "Done"
     _pop
+}
+
+function manage_dependencies() {
+    if [ ! "$1" ]; then
+        error "The action is missing."
+        exit 1
+    fi
+
+    case "$1" in
+        "build")
+            build_dep "${@:2}"
+            ;;
+        "package")
+            package_dep "${@:2}"
+            ;;
+        "push")
+            push_dep "${@:2}"
+            ;;
+        "pull")
+            pull_dep "${@:2}"
+            ;;
+        *)
+            error "Don't know about '$1' action"
+            exit 1
+        ;;
+    esac
+}
+
+
+function build_dep() {
+    if [ ! "$1" ]; then
+        error "The dependency name is missing."
+        exit 1
+    fi
+
+    build_"$1" "${@:2}"
+}
+
+function package_dep() {
+    if [ ! "$1" ]; then
+        error "The dependency name is missing."
+        exit 1
+    fi
+
+    package_"$1" "${@:2}"
+}
+
+function push_dep() {
+    if [ ! "$1" ]; then
+        error "The dependency name is missing."
+        exit 1
+    fi
+
+    push_"$1" "${@:2}"
+}
+
+function pull_dep() {
+    if [ ! "$1" ]; then
+        error "The dependency name is missing."
+        exit 1
+    fi
+
+    pull_"$1" "${@:2}"
 }

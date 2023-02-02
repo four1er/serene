@@ -44,6 +44,10 @@ DEV_HEROES="https://beta.devheroes.codes"
 BUILD_DIR_NAME="build"
 DEPS_BUILD_DIR_NAME=".env"
 
+# Serene subprojects. We use this array to run common tasks on all the projects
+# like running the test cases
+PROJECTS=(libserene serenec serene-repl serene-tblgen)
+
 # -----------------------------------------------------------------------------
 # INTERNAL VARS
 # -----------------------------------------------------------------------------
@@ -77,6 +81,8 @@ ZSTD_CLI="zstd --ultra -22 -T$(nproc)"
 export ME
 export TARGET_ARCHS
 export DEV_HEROES
+export PROJECTS
+export DEPS_BUILD_DIR_NAME
 
 export BUILD_DIR
 export LLVM_DIR_NAME

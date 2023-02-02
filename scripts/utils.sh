@@ -69,3 +69,23 @@ function get_version() {
     git describe
     _pop
 }
+
+function http() {
+    if [[ -z "$DEV_HEROES_TOKEN" ]]; then
+        error '"$DEV_HEROES_TOKEN" is not set.'
+        exit 1
+    fi
+
+    local pkg_name
+    local version
+
+    pkg_name="$1"
+    version="$2"
+
+    curl "$DEV_HEROES/api/packages/serene/generic/$pkg_name/$version/$pkg_name.$version.zstd" \
+         --upload-file "$pkg_name.$version.zstd" \
+         --progress-bar \
+         -H "accept: application/json" \
+         -H "Authorization: token $DEV_HEROES_TOKEN" \
+         -H "Content-Type: application/json"
+}
