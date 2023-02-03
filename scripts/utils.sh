@@ -72,7 +72,7 @@ function get_version() {
 
 function http_push() {
     if [[ -z "$DEV_HEROES_TOKEN" ]]; then
-        error '"$DEV_HEROES_TOKEN" is not set.'
+        error "\$DEV_HEROES_TOKEN is not set."
         exit 1
     fi
 

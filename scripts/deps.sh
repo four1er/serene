@@ -23,8 +23,8 @@
 #
 # IMPORTANT: ENV Vars comes from the `config` file
 
-# shellcheck source=./deps.sh
-source ./scripts/utils.sh
+# shellcheck source=/dev/null
+source "scripts/utils.sh"
 
 function build_toolchain() { ## Build LLVM and the toolchain
     local version
@@ -78,7 +78,7 @@ function package_toolchain() { ## Packages the built toolchain
     info "Packaging the toolchain version '$version'..."
     _push "$DEPS_BUILD_DIR"
     local pkg
-    pkg="$LLVM_DIR_NAME.$(get_version $LLVM_DIR)"
+    pkg="$LLVM_DIR_NAME.$(get_version "$LLVM_DIR")"
     time tar -I "$ZSTD_CLI" -cf "$pkg.zstd" "$pkg"
     _pop
 }
@@ -182,7 +182,7 @@ function package_bdwgc() { ## Packages the built toolchain
     info "Packaging the BDWGC version '$version'..."
     _push "$DEPS_BUILD_DIR"
     local pkg
-    pkg="$BDWGC_DIR_NAME.$(get_version $BDWGC_SOURCE_DIR)"
+    pkg="$BDWGC_DIR_NAME.$(get_version "$BDWGC_SOURCE_DIR")"
     time tar -I "$ZSTD_CLI" -cf "$pkg.zstd" "$pkg"
     _pop
 }
