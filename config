@@ -42,7 +42,7 @@ TARGET_ARCHS="X86;AArch64;AMDGPU;ARM;RISCV;WebAssembly"
 # The repository to push/pull packages to/from.
 DEV_HEROES="https://beta.devheroes.codes"
 BUILD_DIR_NAME="build"
-DEPS_BUILD_DIR_NAME=".env"
+DEPS_BUILD_DIR_NAME="$HOME/.serene/env"
 
 # Serene subprojects. We use this array to run common tasks on all the projects
 # like running the test cases
