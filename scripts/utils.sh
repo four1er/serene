@@ -70,7 +70,7 @@ function get_version() {
     _pop
 }
 
-function http() {
+function http_push() {
     if [[ -z "$DEV_HEROES_TOKEN" ]]; then
         error '"$DEV_HEROES_TOKEN" is not set.'
         exit 1
@@ -88,4 +88,24 @@ function http() {
          -H "accept: application/json" \
          -H "Authorization: token $DEV_HEROES_TOKEN" \
          -H "Content-Type: application/json"
+}
+
+function http_pull() {
+    local pkg_name
+    local version
+    local output
+    local url
+
+    pkg_name="$1"
+    version="$2"
+    output="$3"
+    url="$DEV_HEROES/api/packages/serene/generic/$pkg_name/$version/$pkg_name.$version.zstd"
+
+    info "Fetching '$url'..."
+
+    if curl "$url" --fail --progress-bar -o "$output" 2> /dev/null; then
+        return 0
+    else
+        return 4
+    fi
 }

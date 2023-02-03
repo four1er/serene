@@ -90,9 +90,31 @@ function push_toolchain() { ## Push the toolchain to the package repository
 
     info "Pushing the toolchain version '$version'..."
     _push "$DEPS_BUILD_DIR"
-    http "$LLVM_DIR_NAME" "$version"
+    http_push "$LLVM_DIR_NAME" "$version"
     echo ""
     info "Done"
+    _pop
+}
+
+function pull_toolchain() {
+    local version
+    version=$(get_version "$LLVM_DIR")
+
+    info "Pulling the toolchain version '$version'..."
+
+    if [ -f "$LLVM_INSTALL_DIR.zstd" ]; then
+        error "The package is already in the cache at: '$LLVM_INSTALL_DIR.zstd'"
+        return
+    fi
+
+    _push "$DEPS_BUILD_DIR"
+    if http_pull "$LLVM_DIR_NAME" "$version" "$LLVM_INSTALL_DIR.zstd"; then
+        echo ""
+        info "Done"
+    else
+        echo ""
+        error "Can't find the package."
+    fi
     _pop
 }
 
@@ -167,9 +189,32 @@ function push_bdwgc() { ## Push the BDWGC package to the package repository
 
     info "Pushing the BDWGC package version '$version'..."
     _push "$DEPS_BUILD_DIR"
-    http "$BDWGC_DIR_NAME" "$version"
+    http_push "$BDWGC_DIR_NAME" "$version"
     echo ""
     info "Done"
+    _pop
+}
+
+function pull_bdwgc() {
+    local version
+    version=$(get_version "$BDWGC_SOURCE_DIR")
+
+    info "Pulling the BDWGC version '$version'..."
+
+    if [ -f "$BDWGC_INSTALL_DIR.zstd" ]; then
+        error "The package is already in the cache at: '$BDWGC_INSTALL_DIR.zstd'"
+        return
+    fi
+
+    _push "$DEPS_BUILD_DIR"
+
+    if http_pull "$BDWGC_DIR_NAME" "$version" "$BDWGC_INSTALL_DIR.zstd"; then
+        echo ""
+        info "Done"
+    else
+        echo ""
+        error "Can't find the package."
+    fi
     _pop
 }
 
@@ -192,6 +237,10 @@ function manage_dependencies() {
         "pull")
             pull_dep "${@:2}"
             ;;
+        "install")
+            install_dependencies "${@:2}"
+            ;;
+
         *)
             error "Don't know about '$1' action"
             exit 1
@@ -199,6 +248,14 @@ function manage_dependencies() {
     esac
 }
 
+function pull_dep() {
+    if [ ! "$1" ]; then
+        error "The dependency name is missing."
+        exit 1
+    fi
+
+    pull_"$1" "${@:2}"
+}
 
 function build_dep() {
     if [ ! "$1" ]; then
@@ -234,4 +291,10 @@ function pull_dep() {
     fi
 
     pull_"$1" "${@:2}"
+}
+
+function install_dependencies() {
+    info "Looking up the dependencies in the remote repository"
+    pull_toolchain || true
+    pull_bdwgc || true
 }
