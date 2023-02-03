@@ -1,0 +1,7 @@
+pipeline:
+  Prepare:
+    image: alpine
+    commands:
+      - whoami
+      - pwd
+      - echo $HOME
