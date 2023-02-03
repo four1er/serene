@@ -1,6 +1,6 @@
 pipeline:
   Prepare:
-    image: beta.devheroes.codes/serene/ci:5
+    image: beta.devheroes.codes/serene/ci:6
     commands:
       - ./builder setup
       - ./builder deps pull toolchain
