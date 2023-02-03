@@ -34,8 +34,6 @@ function build_toolchain() { ## Build LLVM and the toolchain
 
     if [[ -d "$LLVM_BUILD_DIR.$version" ]]; then
         warn "A build dir for 'llvm' already exists at '$LLVM_BUILD_DIR.$version'"
-        warn "Skipping..."
-        return
     fi
 
     mkdir -p "$LLVM_BUILD_DIR.$version"
