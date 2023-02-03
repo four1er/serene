@@ -1,13 +1,12 @@
-clone:
-   git:
-     image: woodpeckerci/plugin-git
-     settings:
-       depth: 1
-       lfs: false
+# clone:
+#    git:
+#      image: woodpeckerci/plugin-git
+#      settings:
+#        depth: 1
 
 pipeline:
   Prepare:
     image: alpine
     commands:
       - ls
-      - ./builder setup
+      - bashe ./builder setup
