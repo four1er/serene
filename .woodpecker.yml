@@ -1,12 +1,5 @@
-# clone:
-#    git:
-#      image: woodpeckerci/plugin-git
-#      settings:
-#        depth: 1
-
 pipeline:
   Prepare:
     image: alpine
     commands:
-      - ls
-      - bashe ./builder setup
+      - bash ./builder setup
