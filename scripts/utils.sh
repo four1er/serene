@@ -103,7 +103,7 @@ function http_pull() {
 
     info "Fetching '$url'..."
 
-    if curl "$url" --fail --progress-bar -o "$output" 2> /dev/null; then
+    if curl "$url" --fail --progress-bar -o "$output"; then
         return 0
     else
         return 4

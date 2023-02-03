@@ -107,7 +107,7 @@ function pull_toolchain() {
     info "Pulling the toolchain version '$version'..."
 
     if [ -f "$LLVM_INSTALL_DIR.zstd" ]; then
-        error "The package is already in the cache at: '$LLVM_INSTALL_DIR.zstd'"
+        warn "The package is already in the cache at: '$LLVM_INSTALL_DIR.zstd'"
         return
     fi
 
@@ -212,7 +212,7 @@ function pull_bdwgc() {
     info "Pulling the BDWGC version '$version'..."
 
     if [ -f "$BDWGC_INSTALL_DIR.zstd" ]; then
-        error "The package is already in the cache at: '$BDWGC_INSTALL_DIR.zstd'"
+        warn "The package is already in the cache at: '$BDWGC_INSTALL_DIR.zstd'"
         return
     fi
 
