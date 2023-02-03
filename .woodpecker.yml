@@ -1,3 +1,10 @@
+clone:
+   git:
+     image: woodpeckerci/plugin-git
+     settings:
+       depth: 1
+       recursive: false
+
 pipeline:
   Prepare:
     image: alpine
