@@ -39,6 +39,8 @@ function build_toolchain() { ## Build LLVM and the toolchain
     mkdir -p "$LLVM_BUILD_DIR.$version"
     mkdir -p "$LLVM_INSTALL_DIR"
 
+    # TODO: Check for ccache
+    # TODO: Check for LLD and Clang
     _push "$LLVM_BUILD_DIR.$version"
     cmake -G Ninja \
           -DCMAKE_INSTALL_PREFIX="$LLVM_INSTALL_DIR" \
