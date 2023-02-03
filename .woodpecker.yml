@@ -5,3 +5,4 @@ pipeline:
       - whoami
       - pwd
       - echo $HOME
+      - ./builder setup
