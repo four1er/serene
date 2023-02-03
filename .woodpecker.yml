@@ -3,7 +3,7 @@ clone:
      image: woodpeckerci/plugin-git
      settings:
        depth: 1
-       submodule_overrides: true
+
 
 pipeline:
   Prepare:
