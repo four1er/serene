@@ -7,3 +7,12 @@ pipeline:
       - ./builder deps pull bdwgc
     volumes:
       - serene_config:/root/.serene
+
+  Build:
+    image: beta.devheroes.codes/serene/ci:4
+    commands:
+      - source activate
+      - ./builder build
+
+    volumes:
+      - serene_config:/root/.serene
