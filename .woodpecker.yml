@@ -3,13 +3,11 @@ clone:
      image: woodpeckerci/plugin-git
      settings:
        depth: 1
-       recursive: false
+       submodule_overrides: true
 
 pipeline:
   Prepare:
     image: alpine
     commands:
-      - whoami
-      - pwd
-      - echo $HOME
+      - ls
       - ./builder setup
