@@ -53,13 +53,6 @@ source "$ME/config"
 
 LLVM_VERSION="11"
 
-
-CC=$(which clang)
-CXX=$(which clang++)
-
-export CC
-export CXX
-
 # TODO: Add sloppiness to the cmake list file as well
 export CCACHE_SLOPPINESS="pch_defines,time_macros"
 

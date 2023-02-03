@@ -2,6 +2,8 @@ pipeline:
   Prepare:
     image: beta.devheroes.codes/serene/ci:3
     commands:
+      - ls
+      - pwd
       - ./builder setup
       - ./builder deps pull toolchain
       - ./builder deps pull bdwgc
