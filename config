@@ -81,7 +81,6 @@ export ME
 export TARGET_ARCHS
 export DEV_HEROES
 export PROJECTS
-export DEPS_BUILD_DIR_NAME
 
 export BUILD_DIR
 export LLVM_DIR_NAME

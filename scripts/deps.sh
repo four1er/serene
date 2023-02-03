@@ -76,7 +76,11 @@ function package_toolchain() { ## Packages the built toolchain
     fi
 
     info "Packaging the toolchain version '$version'..."
-    time tar -I "$ZSTD_CLI" -C "$DEPS_BUILD_DIR" -cf "$LLVM_INSTALL_DIR.zstd" "$LLVM_INSTALL_DIR"
+    _push "$DEPS_BUILD_DIR"
+    local pkg
+    pkg="$LLVM_DIR_NAME.$(get_version $LLVM_DIR)"
+    time tar -I "$ZSTD_CLI" -cf "$pkg.zstd" "$pkg"
+    _pop
 }
 
 function push_toolchain() { ## Push the toolchain to the package repository
@@ -109,6 +113,7 @@ function pull_toolchain() {
 
     _push "$DEPS_BUILD_DIR"
     if http_pull "$LLVM_DIR_NAME" "$version" "$LLVM_INSTALL_DIR.zstd"; then
+        unpack "$LLVM_INSTALL_DIR.zstd"
         echo ""
         info "Done"
     else
@@ -175,7 +180,11 @@ function package_bdwgc() { ## Packages the built toolchain
     fi
 
     info "Packaging the BDWGC version '$version'..."
-    time tar -I "$ZSTD_CLI" -C "$DEPS_BUILD_DIR"  -cf "$BDWGC_INSTALL_DIR.zstd" "$BDWGC_INSTALL_DIR"
+    _push "$DEPS_BUILD_DIR"
+    local pkg
+    pkg="$BDWGC_DIR_NAME.$(get_version $BDWGC_SOURCE_DIR)"
+    time tar -I "$ZSTD_CLI" -cf "$pkg.zstd" "$pkg"
+    _pop
 }
 
 function push_bdwgc() { ## Push the BDWGC package to the package repository
@@ -209,6 +218,8 @@ function pull_bdwgc() {
     _push "$DEPS_BUILD_DIR"
 
     if http_pull "$BDWGC_DIR_NAME" "$version" "$BDWGC_INSTALL_DIR.zstd"; then
+        info "Unpacking '$BDWGC_INSTALL_DIR.zstd'..."
+        unpack "$BDWGC_INSTALL_DIR.zstd"
         echo ""
         info "Done"
     else
@@ -297,4 +308,8 @@ function install_dependencies() {
     info "Looking up the dependencies in the remote repository"
     pull_toolchain || true
     pull_bdwgc || true
+}
+
+function unpack() {
+    tar -I "$ZSTD_CLI" -xf "$1" -C "$DEPS_BUILD_DIR"
 }
