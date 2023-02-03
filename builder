@@ -61,12 +61,6 @@ LSAN_OPTIONS=suppressions=$(pwd)/.ignore_sanitize
 export LSAN_OPTIONS
 export LDFLAGS="-fuse-ld=lld"
 
-# The `builder` script is supposed to be run from the
-# root of the source tree
-ROOT_DIR=$(pwd)
-BUILD_DIR=$ROOT_DIR/build
-
-
 CMAKEARGS_DEBUG=("-DCMAKE_BUILD_TYPE=Debug")
 CMAKEARGS=("-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
            "-DSERENE_CCACHE_DIR=$HOME/.ccache")
