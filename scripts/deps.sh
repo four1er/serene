@@ -119,6 +119,7 @@ function pull_toolchain() {
     else
         echo ""
         error "Can't find the package."
+        exit 4
     fi
     _pop
 }
@@ -225,6 +226,7 @@ function pull_bdwgc() {
     else
         echo ""
         error "Can't find the package."
+        exit 4
     fi
     _pop
 }
