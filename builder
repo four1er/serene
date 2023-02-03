@@ -140,7 +140,7 @@ function compile() { ## Compiles the project using the generated build scripts
 function build() { ## Builds the project by regenerating the build scripts
     local cpus
 
-    clean
+    rm -rf "$BUILD_DIR"
     build-gen "$@"
     pushed_build
 
@@ -151,7 +151,7 @@ function build() { ## Builds the project by regenerating the build scripts
 }
 
 function build-20() { ## Builds the project using C++20 (will regenerate the build)
-    clean
+    rm -rf "$BUILD_DIR"
     pushed_build
     cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCPP_20_SUPPORT=ON "$@" "$ROOT_DIR"
     cmake --build .
@@ -163,7 +163,7 @@ function build-tidy() { ## Builds the project using clang-tidy (It takes longer 
 }
 
 function build-release() { ## Builds the project in "Release" mode
-    clean
+    rm -rf "$BUILD_DIR"
     pushed_build
     cmake -G Ninja -DCMAKE_BUILD_TYPE=Release "${CMAKEARGS[@]}" "$ROOT_DIR"
     cmake --build . --config Release
@@ -171,7 +171,7 @@ function build-release() { ## Builds the project in "Release" mode
 }
 
 function build-docs() { ## Builds the documentation of Serene
-    clean
+    rm -rf "$BUILD_DIR"
     pip install -r "$ME/docs/requirements.txt"
     pushed_build
     cmake -G Ninja -DSERENE_ENABLE_DOCS=ON "$ROOT_DIR"
@@ -223,7 +223,7 @@ function tests() { ## Runs all the test cases
 }
 
 function build-tests() { ## Generates and build the project including the test cases
-    clean
+    rm -rf "$BUILD_DIR"
     pushed_build
     cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DSERENE_BUILD_TESTING=ON "$ROOT_DIR"
     cmake --build .
@@ -407,7 +407,7 @@ function devfs_shell() { ## Get a bash shell on the devfs
 }
 
 function scan-build() { ## Runs the `scan-build` utility to analyze the build process
-         clean
+    rm -rf "$BUILD_DIR"
          build-gen
          pushed_build
          # The scan-build utility scans the build for bugs checkout the man page
