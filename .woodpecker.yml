@@ -1,8 +1,7 @@
 pipeline:
   Prepare:
-    image: alpine
+    image: beta.devheroes.codes/serene/ci
     commands:
-      - apk add --no-cache bash
       - bash ./builder setup
       - bash ./builder deps pull toolchain
       - bash ./builder deps pull bdwgc
