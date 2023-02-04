@@ -67,8 +67,6 @@ BDWGC_DIR_NAME="bdwgc"
 BDWGC_SOURCE_DIR="$ME/deps/$BDWGC_DIR_NAME"
 BDWGC_BUILD_DIR="$DEPS_BUILD_DIR/${BDWGC_DIR_NAME}_build"
 BDWGC_INSTALL_DIR="$DEPS_BUILD_DIR/$BDWGC_DIR_NAME.$(get_version $BDWGC_SOURCE_DIR)"
-# This is a variable that cmake expects
-BDWgc_DIR="$BDWGC_INSTALL_DIR/lib64/cmake/bdwgc"
 
 IWYU_DIR="$ME/deps/include-what-you-use"
 
@@ -92,4 +90,3 @@ export BDWGC_DIR_NAME
 export BDWGC_DIR
 export BDWGC_BUILD_DIR
 export BDWGC_INSTALL_DIR
-export BDWgc_DIR

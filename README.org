@@ -47,7 +47,6 @@ The ~builder~ script can build the necessary dependencies for you. Just make sur
 all the dependencies as instructed above and follow:
 
  #+BEGIN_SRC bash
-
    # Download prebuilt dependencies instead of building from source (X86_64 only)
 
    # Try to pull a prebuilt package for the toolchain (including llvm libraries)
@@ -63,9 +62,16 @@ all the dependencies as instructed above and follow:
  After building or pulling the dependencies, you'll have all of them under =~/.serene/env/=.
  All you need to do is to activate the environment and build Serene itself.
 
- To activate the environment, you can just do ~source ./activate~ in the root of the
- source tree to activate the toolchain and the right set up dependencies.
+After a =pull= or =build=, the ~builder~ script will let you know that what environment variables
+are necessary to activate the dependencies. Also, if you are lazy like me, you can just set
+the =SERENE_AUTO_DEP= to =true= and let the builder script set those for you. E.g.
 
+ #+BEGIN_SRC bash
+   export SERENE_AUTO_DEP="true"
+ #+END_SRC
+
+Be advised that, setting up the above variable makes it a bit harder to switch to other environment
+in the same shell that usually is not the case.
 
 ** Build and installing dependencies (Other platforms)
 Currently, the ~builder~ script does not support any platform beside GNU/Linux. So, you

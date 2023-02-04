@@ -64,6 +64,7 @@ function build_toolchain() { ## Build LLVM and the toolchain
     cmake --build . --parallel
     cmake -DCMAKE_INSTALL_PREFIX="$LLVM_INSTALL_DIR" -P cmake_install.cmake
     _pop
+    info_toolchain
 }
 
 function package_toolchain() { ## Packages the built toolchain
@@ -78,7 +79,7 @@ function package_toolchain() { ## Packages the built toolchain
     info "Packaging the toolchain version '$version'..."
     _push "$DEPS_BUILD_DIR"
     local pkg
-    pkg="$LLVM_DIR_NAME.$(get_version "$LLVM_DIR")"
+    pkg="$LLVM_DIR_NAME.$version"
     time tar -I "$ZSTD_CLI" -cf "$pkg.zstd" "$pkg"
     _pop
 }
@@ -122,6 +123,19 @@ function pull_toolchain() {
         exit 4
     fi
     _pop
+    info_toolchain
+}
+
+function info_toolchain() {
+    local version
+    version=$(get_version "$LLVM_DIR")
+
+    info "To activate toolchain version '$version' add the following env variable to your shell:"
+
+    info "export PATH=$LLVM_INSTALL_DIR/bin:$PATH"
+    info "export CC='$LLVM_INSTALL_DIR/bin/clang'"
+    info "export CXX='$LLVM_INSTALL_DIR/bin/clang++'"
+    info "export LDFLAGS=\"-fuse-ld=lld $LDFLAGS\""
 }
 
 function build_bdwgc() { ## Builds the BDW GC
@@ -168,7 +182,9 @@ function build_bdwgc() { ## Builds the BDW GC
 
     cmake --build . --parallel
     cmake -DCMAKE_INSTALL_PREFIX="$BDWGC_INSTALL_DIR" -P cmake_install.cmake
+
     _pop
+    info_bdwgc
 }
 
 function package_bdwgc() { ## Packages the built toolchain
@@ -183,7 +199,7 @@ function package_bdwgc() { ## Packages the built toolchain
     info "Packaging the BDWGC version '$version'..."
     _push "$DEPS_BUILD_DIR"
     local pkg
-    pkg="$BDWGC_DIR_NAME.$(get_version "$BDWGC_SOURCE_DIR")"
+    pkg="$BDWGC_DIR_NAME.$version"
     time tar -I "$ZSTD_CLI" -cf "$pkg.zstd" "$pkg"
     _pop
 }
@@ -229,6 +245,16 @@ function pull_bdwgc() {
         exit 4
     fi
     _pop
+
+    info_bdwgc
+}
+
+function info_bdwgc() {
+    local version
+    version=$(get_version "$BDWGC_SOURCE_DIR")
+
+    info "To activate BDWGC version '$version' add the following env variable to your shell:"
+    info "export BDWgc_DIR='$BDWGC_INSTALL_DIR/lib64/cmake/bdwgc'"
 }
 
 function manage_dependencies() {
@@ -314,4 +340,32 @@ function install_dependencies() {
 
 function unpack() {
     tar -I "$ZSTD_CLI" -xf "$1" -C "$DEPS_BUILD_DIR"
+}
+
+
+function setup_dependencies() {
+    if [[ "$SERENE_AUTO_DEP" = "true" ]]; then
+        if [ -d "$LLVM_INSTALL_DIR" ]; then
+            info "Activating the toolchain at '$LLVM_INSTALL_DIR'..."
+            export PATH="$LLVM_INSTALL_DIR/bin:$PATH"
+
+            CC=$(which clang)
+            CXX=$(which clang++)
+            info "Setting CC to '$CC'"
+            info "Setting CXX to '$CXX'"
+
+            LDFLAGS="-fuse-ld=lld"
+            info "Switching to LLD."
+
+            export CC
+            export CXX
+            export LDFLAGS
+        fi
+        if [ -d "$BDWGC_INSTALL_DIR" ]; then
+            info "Activating the BDWGC at '$BDWGC_INSTALL_DIR'..."
+
+            BDWgc_DIR="$BDWGC_INSTALL_DIR/lib64/cmake/bdwgc"
+            export BDWgc_DIR
+        fi
+    fi
 }

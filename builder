@@ -78,6 +78,7 @@ source "$ME/scripts/deps.sh"
 # Initialization
 # -----------------------------------------------------------------------------
 mkdir -p "$DEPS_BUILD_DIR"
+setup_dependencies
 
 # -----------------------------------------------------------------------------
 # Helper functions
@@ -109,8 +110,8 @@ function popd_build() {
 function build-gen() {
     pushed_build
     info "Running: "
-    info "cmake -G Ninja ${CMAKEARGS[*]} ${CMAKEARGS[*]}" "\"$*\" \"$ROOT_DIR\""
-    cmake -G Ninja "${CMAKEARGS[@]}" "${CMAKEARGS_DEBUG[@]}" "$*" "$ROOT_DIR"
+    info "cmake -G Ninja ${CMAKEARGS[*]} ${CMAKEARGS[*]}" "\"$*\" \"$ME\""
+    cmake -G Ninja "${CMAKEARGS[@]}" "${CMAKEARGS_DEBUG[@]}" "$*" "$ME"
     popd_build
 }
 
@@ -132,6 +133,7 @@ function build() { ## Builds the project by regenerating the build scripts
     local cpus
 
     rm -rf "$BUILD_DIR"
+
     build-gen "$@"
     pushed_build
 
