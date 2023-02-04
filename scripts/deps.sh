@@ -354,12 +354,14 @@ function setup_dependencies() {
             info "Setting CC to '$CC'"
             info "Setting CXX to '$CXX'"
 
-            LDFLAGS="-fuse-ld=lld"
+            CXXFLAGS="-stdlib=libc++ -lc++abi $CXXFLAGS"
+            LDFLAGS="-fuse-ld=lld $LDFLAGS"
             info "Switching to LLD."
 
             export CC
             export CXX
             export LDFLAGS
+            export CXXFLAGS
         fi
         if [ -d "$BDWGC_INSTALL_DIR" ]; then
             info "Activating the BDWGC at '$BDWGC_INSTALL_DIR'..."

@@ -133,7 +133,6 @@ function build() { ## Builds the project by regenerating the build scripts
     local cpus
 
     rm -rf "$BUILD_DIR"
-    env
     build-gen "$@"
     pushed_build
 
