@@ -1,15 +1,9 @@
 pipeline:
   Prepare:
-    image: beta.devheroes.codes/serene/ci:6
+    image: beta.devheroes.codes/serene/ci:7
     commands:
       - ./builder deps pull toolchain
       - ./builder deps pull bdwgc
-    volumes:
-      - serene_config:/root/.serene
-
-  Build:
-    image: beta.devheroes.codes/serene/ci:4
-    commands:
       - source activate
       - ./builder build
 
