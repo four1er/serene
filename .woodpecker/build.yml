@@ -1,10 +1,11 @@
 pipeline:
   Prepare:
-    image: beta.devheroes.codes/serene/ci:8
+    image: beta.devheroes.codes/serene/ci:9
     commands:
       - pwd
       - ./builder deps pull toolchain
       - ./builder deps pull bdwgc
+      - export SERENE_ROOT=$(pwd)
       - source activate
       - ./builder build
 

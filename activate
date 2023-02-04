@@ -77,8 +77,12 @@ deactivate () {
 deactivate nondestructive
 
 ME=$(cd "$(dirname "$0")/." >/dev/null 2>&1 ; pwd -P)
-echo ">> $ME -- $( dirname "${BASH_SOURCE[0]}" )"
-source "$ME/config"
+
+if [[ "$0" -eq "bash" ]]; then
+    source "./config"
+else
+    source "$ME/config"
+fi
 
 info "Activating LLVM version '$(get_version $LLVM_DIR)'"
 info "Activating BDWGC version '$(get_version $BDWGC_SOURCE_DIR)'"
