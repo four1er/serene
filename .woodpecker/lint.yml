@@ -1,0 +1,7 @@
+pipeline:
+  Linters:
+    image: beta.devheroes.codes/serene/ci:6
+    commands:
+      - ./builder setup
+      - export FILES="$(git diff --name-only HEAD HEAD~1)"
+      - pre-commit --files "$FILES"
