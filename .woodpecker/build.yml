@@ -1,7 +1,8 @@
 pipeline:
   Prepare:
-    image: beta.devheroes.codes/serene/ci:7
+    image: beta.devheroes.codes/serene/ci:8
     commands:
+      - pwd
       - ./builder deps pull toolchain
       - ./builder deps pull bdwgc
       - source activate
