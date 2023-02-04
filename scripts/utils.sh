@@ -65,9 +65,11 @@ function _pop() {
 }
 
 function get_version() {
-    _push "$1"
-    git describe --abbrev=40
-    _pop
+    # _push "$1"
+    # git describe --abbrev=40
+    # _pop
+
+    git ls-tree HEAD "$1" | awk '{ print $3 }'
 }
 
 function http_push() {
