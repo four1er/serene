@@ -66,7 +66,7 @@ function _pop() {
 
 function get_version() {
     _push "$1"
-    git describe
+    git describe --abbrev=40
     _pop
 }
 
