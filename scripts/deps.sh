@@ -354,7 +354,10 @@ function setup_dependencies() {
             info "Setting CC to '$CC'"
             info "Setting CXX to '$CXX'"
 
-            CXXFLAGS="-stdlib=libc++ -lc++abi $CXXFLAGS"
+            ls -l "$CXX"
+            echo "-.hnthnthnthnt"
+            ls -l /root/.serene/env/llvm.b3b940d1501e39563ac549c3a5a89b25ae8ab7b8/bin/
+            #CXXFLAGS="-stdlib=libc++ -lc++abi $CXXFLAGS"
             LDFLAGS="-fuse-ld=lld $LDFLAGS"
             info "Switching to LLD."
 
