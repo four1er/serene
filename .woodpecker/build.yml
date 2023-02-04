@@ -14,7 +14,6 @@ pipeline:
       - ./builder deps pull toolchain
       - ./builder deps pull bdwgc
       - export SERENE_AUTO_DEP=true
-      - ls $CXX -l
       - ./builder build
 
     volumes:
