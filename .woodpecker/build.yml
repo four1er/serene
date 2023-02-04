@@ -7,14 +7,21 @@ clone:
       recursive: false
 
 pipeline:
-  Prepare:
+  Build:
     image: beta.devheroes.codes/serene/ci:9
     commands:
       - pwd
       - ./builder deps pull toolchain
       - ./builder deps pull bdwgc
       - export SERENE_AUTO_DEP=true
+      - ls $CXX -l
       - ./builder build
 
     volumes:
       - serene_config:/root/.serene
+  Failure:
+    image: beta.devheroes.codes/serene/ci:9
+    commands:
+      - cat /woodpecker/src/beta.devheroes.codes/Serene/serene/build/CMakeFiles/CMakeError.log
+    when:
+      status: [ failure ]
