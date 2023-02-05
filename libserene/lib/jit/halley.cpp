@@ -50,6 +50,7 @@
 #include <llvm/IRReader/IRReader.h>
 #include <llvm/Support/CodeGen.h> // for Level
 #include <llvm/Support/Error.h>
+#include <llvm/Support/ErrorHandling.h>
 #include <llvm/Support/FileSystem.h>     // for OF_None
 #include <llvm/Support/FormatVariadic.h> // for formatv
 #include <llvm/Support/MemoryBuffer.h>
@@ -359,11 +360,11 @@ const types::InternalString &Halley::getInternalString(const char *s) {
   assert(s && "s is nullptr: getInternalString");
   auto len = std::strlen(s);
 
-  auto *str =
-      (types::InternalString *)GC_MALLOC_ATOMIC(sizeof(types::InternalString));
+  auto *str = (types::InternalString *)GC_MALLOC(sizeof(types::InternalString));
 
-  str->data = (char *)GC_MALLOC_ATOMIC(len);
-  memcpy((void *)str->data, (void *)s, len);
+  // str->data = (char *)GC_MALLOC_ATOMIC(len);
+  // memcpy((void *)str->data, (void *)s, len);
+  memcpy((void *)str, (const void *)s, len);
   str->len = len;
 
   stringStorage.push_back(str);
@@ -628,6 +629,7 @@ MaybeDylibPtr Halley::loadNamespaceFrom(fs::NSFileType type_,
   case fs::NSFileType::SharedLib:
     return loadNamespaceFrom<fs::NSFileType::StaticLib>(req);
   };
+  llvm_unreachable("Halley::loadNamespaceFrom unhandled NSFileType");
 };
 
 MaybeDylibPtr Halley::loadNamespace(std::string &nsName) {
