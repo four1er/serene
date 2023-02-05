@@ -40,37 +40,71 @@
 #
 set -e
 
-# -----------------------------------------------------------------------------
-# Vars & Config
-# -----------------------------------------------------------------------------
-
 command=$1
-VERSION="0.7.0"
+VERSION="0.8.0"
 
 ME=$(cd "$(dirname "$0")/." >/dev/null 2>&1 ; pwd -P)
-
-source "$ME/config"
-
-LLVM_VERSION="11"
-
-# TODO: Add sloppiness to the cmake list file as well
-export CCACHE_SLOPPINESS="pch_defines,time_macros"
-
-export ASAN_OPTIONS=check_initialization_order=1
-LSAN_OPTIONS=suppressions=$(pwd)/.ignore_sanitize
-export LSAN_OPTIONS
-export LDFLAGS="-fuse-ld=lld"
-
-CMAKEARGS_DEBUG=("-DCMAKE_BUILD_TYPE=Debug")
-CMAKEARGS=("-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
-           "-DCMAKE_CXX_FLAGS='-stdlib=libc++'"
-           "-DSERENE_CCACHE_DIR=$HOME/.ccache")
 
 # shellcheck source=./scripts/utils.sh
 source "$ME/scripts/utils.sh"
 
 # shellcheck source=./scripts/devfs.sh
 source "$ME/scripts/devfs.sh"
+
+# -----------------------------------------------------------------------------
+# CONFIG VARS
+# -----------------------------------------------------------------------------
+
+# By default Clang is the compiler that we use and support. But you may use
+# whatever you want. But just be aware of the fact that we might not be able
+# to help you in case of any issue.
+CC="${CC:-clang}"
+CXX="${CXX:-clang++}"
+LDFLAGS="-fuse-ld=lld"
+
+# The target architectures that we want to build Serene in and also we want
+# serene to support. We use this variable when we're building the llvm
+TARGET_ARCHS="X86;AArch64;AMDGPU;ARM;RISCV;WebAssembly"
+
+# The repository to push/pull packages to/from.
+DEV_HEROES="https://beta.devheroes.codes"
+
+BUILD_DIR_NAME="build"
+export BUILD_DIR_NAME
+
+BUILD_DIR="$ME/$BUILD_DIR_NAME"
+export BUILD_DIR
+
+DEPS_BUILD_DIR="$HOME/.serene/env"
+export DEPS_BUILD_DIR
+
+# Serene subprojects. We use this array to run common tasks on all the projects
+# like running the test cases
+PROJECTS=(libserene serenec serene-repl serene-tblgen)
+
+# TODO: Remove this
+LLVM_VERSION="11"
+
+# TODO: Add sloppiness to the cmake list file as well
+CCACHE_SLOPPINESS="pch_defines,time_macros"
+export CCACHE_SLOPPINESS
+
+ASAN_OPTIONS=check_initialization_order=1
+export ASAN_OPTIONS
+
+LSAN_OPTIONS=suppressions="$ME/.ignore_sanitize"
+export LSAN_OPTIONS
+
+
+CMAKEARGS_DEBUG=(
+    "-DCMAKE_BUILD_TYPE=Debug"
+)
+
+CMAKEARGS=(
+    "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
+    "-DCMAKE_CXX_FLAGS='-stdlib=libc++'"
+    "-DSERENE_CCACHE_DIR=$HOME/.ccache"
+)
 
 # shellcheck source=./scripts/deps.sh
 source "$ME/scripts/deps.sh"
@@ -79,7 +113,7 @@ source "$ME/scripts/deps.sh"
 # Initialization
 # -----------------------------------------------------------------------------
 mkdir -p "$DEPS_BUILD_DIR"
-setup_dependencies
+
 
 # -----------------------------------------------------------------------------
 # Helper functions
@@ -111,8 +145,8 @@ function popd_build() {
 function build-gen() {
     pushed_build
     info "Running: "
-    info "cmake -G Ninja ${CMAKEARGS[*]} ${CMAKEARGS[*]}" "\"$*\" \"$ME\""
-    cmake -G Ninja "${CMAKEARGS[@]}" "${CMAKEARGS_DEBUG[@]}" "$*" "$ME"
+    info "cmake -G Ninja ${CMAKEARGS[*]} ${CMAKEARGS_DEBUG[*]}" "$@" "$ME"
+    cmake -G Ninja "${CMAKEARGS[*]} ${CMAKEARGS_DEBUG[*]}" "$@" "$ME"
     popd_build
 }
 
@@ -126,7 +160,7 @@ function deps() { ## Manage the dependencies
 
 function compile() { ## Compiles the project using the generated build scripts
     pushed_build
-    cmake --build .
+    cmake --build . --parallel
     popd_build
 }
 
@@ -139,7 +173,6 @@ function build() { ## Builds the project by regenerating the build scripts
 
     cpus=$(nproc)
     cmake --build . -j "$cpus"
-
     popd_build
 }
 

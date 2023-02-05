@@ -25,10 +25,15 @@ project(Serene
 # Clangd command file
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
-# Policies ==========================
+# =============================================================================
+# Policies
+# =============================================================================
 cmake_policy(SET CMP0116 OLD)
 
-# User Options ======================
+
+# =============================================================================
+# User Options
+# =============================================================================
 option(CPP_20_SUPPORT "C++20 Support" OFF)
 option(SERENE_BUILD_TESTING "Enable tests" OFF)
 option(SERENE_ENABLE_BUILDID "Enable build id." OFF)

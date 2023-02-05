@@ -13,7 +13,10 @@ pipeline:
       - pwd
       - ./builder deps pull toolchain
       - ./builder deps pull bdwgc
-      - export SERENE_AUTO_DEP=true
+      - export llvm_version=$(git ls-tree HEAD deps/llvm-project|awk '{print $3}')
+      - export bdwgc_version=$(git ls-tree HEAD deps/bdwgc|awk '{print $3}')
+      - export PATH=/root/.serene/env/llvm.$llvm_version/bin:$PATH
+      - export BDWgc_DIR='/root/.serene/env/bdwgc.$bdwgc_version/lib64/cmake/bdwgc'
       - ./builder build
 
     volumes:

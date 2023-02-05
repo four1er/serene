@@ -21,10 +21,24 @@
 # This file contains some functions to build, pack and distribute the
 # dependencies
 #
-# IMPORTANT: ENV Vars comes from the `config` file
 
 # shellcheck source=/dev/null
 source "scripts/utils.sh"
+
+LLVM_DIR_NAME="llvm"
+LLVM_DIR="$ME/deps/llvm-project"
+LLVM_SOURCE_DIR="$LLVM_DIR/$LLVM_DIR_NAME"
+LLVM_BUILD_DIR="$DEPS_BUILD_DIR/${LLVM_DIR_NAME}_build"
+LLVM_INSTALL_DIR="$DEPS_BUILD_DIR/$LLVM_DIR_NAME.$(get_version "$LLVM_DIR")"
+
+BDWGC_DIR_NAME="bdwgc"
+BDWGC_SOURCE_DIR="$ME/deps/$BDWGC_DIR_NAME"
+BDWGC_BUILD_DIR="$DEPS_BUILD_DIR/${BDWGC_DIR_NAME}_build"
+BDWGC_INSTALL_DIR="$DEPS_BUILD_DIR/$BDWGC_DIR_NAME.$(get_version "$BDWGC_SOURCE_DIR")"
+
+IWYU_DIR="$ME/deps/include-what-you-use"
+
+ZSTD_CLI="zstd --ultra -22 -T$(nproc)"
 
 function build_toolchain() { ## Build LLVM and the toolchain
     local version
@@ -126,16 +140,17 @@ function pull_toolchain() {
     info_toolchain
 }
 
+get_toolchain_version() {
+    get_version "$LLVM_DIR"
+}
+
 function info_toolchain() {
     local version
     version=$(get_version "$LLVM_DIR")
 
     info "To activate toolchain version '$version' add the following env variable to your shell:"
 
-    info "export PATH=$LLVM_INSTALL_DIR/bin:$PATH"
-    info "export CC='$LLVM_INSTALL_DIR/bin/clang'"
-    info "export CXX='$LLVM_INSTALL_DIR/bin/clang++'"
-    info "export LDFLAGS=\"-fuse-ld=lld $LDFLAGS\""
+    info "export PATH=$LLVM_INSTALL_DIR/bin:\$PATH"
 }
 
 function build_bdwgc() { ## Builds the BDW GC
@@ -202,6 +217,10 @@ function package_bdwgc() { ## Packages the built toolchain
     pkg="$BDWGC_DIR_NAME.$version"
     time tar -I "$ZSTD_CLI" -cf "$pkg.zstd" "$pkg"
     _pop
+}
+
+function get_bdwgc_version {
+    get_version "$BDWGC_SOURCE_DIR"
 }
 
 function push_bdwgc() { ## Push the BDWGC package to the package repository
@@ -279,13 +298,16 @@ function manage_dependencies() {
         "install")
             install_dependencies "${@:2}"
             ;;
-
+        "version")
+            get_dep_version "${@:2}"
+            ;;
         *)
             error "Don't know about '$1' action"
             exit 1
         ;;
     esac
 }
+
 
 function pull_dep() {
     if [ ! "$1" ]; then
@@ -294,6 +316,15 @@ function pull_dep() {
     fi
 
     pull_"$1" "${@:2}"
+}
+
+function get_dep_version() {
+    if [ ! "$1" ]; then
+        error "The dependency name is missing."
+        exit 1
+    fi
+
+    get_"$1"_version "${@:2}"
 }
 
 function build_dep() {
