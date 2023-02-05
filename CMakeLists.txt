@@ -88,6 +88,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     -Wall
     -Wextra
     -Werror
+    -Wpedantic
     -fno-rtti
     -fno-builtin-strlen
 

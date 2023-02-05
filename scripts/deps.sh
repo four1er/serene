@@ -354,9 +354,6 @@ function setup_dependencies() {
             info "Setting CC to '$CC'"
             info "Setting CXX to '$CXX'"
 
-            ls -l "$CXX"
-            echo "-.hnthnthnthnt"
-            ls -l /root/.serene/env/llvm.b3b940d1501e39563ac549c3a5a89b25ae8ab7b8/bin/
             #CXXFLAGS="-stdlib=libc++ -lc++abi $CXXFLAGS"
             LDFLAGS="-fuse-ld=lld $LDFLAGS"
             info "Switching to LLD."
@@ -364,7 +361,7 @@ function setup_dependencies() {
             export CC
             export CXX
             export LDFLAGS
-            export CXXFLAGS
+            #export CXXFLAGS
         fi
         if [ -d "$BDWGC_INSTALL_DIR" ]; then
             info "Activating the BDWGC at '$BDWGC_INSTALL_DIR'..."

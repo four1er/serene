@@ -63,6 +63,7 @@ export LDFLAGS="-fuse-ld=lld"
 
 CMAKEARGS_DEBUG=("-DCMAKE_BUILD_TYPE=Debug")
 CMAKEARGS=("-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
+           "-DCMAKE_CXX_FLAGS='-stdlib=libc++'"
            "-DSERENE_CCACHE_DIR=$HOME/.ccache")
 
 # shellcheck source=./scripts/utils.sh
