@@ -49,11 +49,8 @@
 
 #include "serene/context.h" // for Serene...
 #include "serene/export.h"  // for SERENE...
-#include "serene/fs.h"
-#include "serene/types/types.h" // for Intern...
 
-#include <llvm/ADT/ArrayRef.h>
-#include <llvm/ADT/None.h>
+#include <llvm/ADT/ArrayRef.h>                                // for Mutabl...
 #include <llvm/ADT/SmallVector.h>                             // for SmallV...
 #include <llvm/ADT/StringMap.h>                               // for StringMap
 #include <llvm/ADT/StringRef.h>                               // for StringRef
@@ -61,14 +58,56 @@
 #include <llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h> // for JITTar...
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>                   // for LLJIT
 #include <llvm/Support/Debug.h>                               // for dbgs
-#include <llvm/Support/Error.h>                               // for Expected
+#include <llvm/Support/Error.h>                               // for Error
 #include <llvm/Support/MemoryBuffer.h>                        // for Memory...
 #include <llvm/Support/MemoryBufferRef.h>                     // for Memory...
 #include <llvm/Support/raw_ostream.h>                         // for raw_os...
 
 #include <memory>   // for unique...
+#include <optional> // for nullopt
 #include <stddef.h> // for size_t
+#include <string>   // for string
 #include <vector>   // for vector
+
+namespace llvm {
+class DataLayout;
+} // namespace llvm
+namespace llvm {
+class JITEventListener;
+} // namespace llvm
+namespace llvm {
+class Module;
+} // namespace llvm
+namespace llvm {
+namespace orc {
+class JITDylib;
+}
+} // namespace llvm
+namespace serene {
+namespace fs {
+enum class NSFileType;
+}
+} // namespace serene
+namespace serene {
+namespace jit {
+class Halley;
+}
+} // namespace serene
+namespace serene {
+namespace types {
+struct InternalString;
+}
+} // namespace serene
+namespace serene {
+namespace types {
+struct Namespace;
+}
+} // namespace serene
+namespace serene {
+namespace types {
+struct Symbol;
+}
+} // namespace serene
 
 #define HALLEY_LOG(...)                  \
   DEBUG_WITH_TYPE("halley", llvm::dbgs() \
@@ -76,19 +115,8 @@
 
 #define MAIN_PROCESS_JD_NAME "<process>"
 
-namespace llvm {
-class DataLayout;
-class JITEventListener;
-class Module;
-namespace orc {
-class JITDylib;
-} // namespace orc
-
-} // namespace llvm
-
 namespace serene {
 namespace jit {
-class Halley;
 
 // Why? This is the lazy man's way to make it easier to replace
 // the class under the hood later on to test different implementaion

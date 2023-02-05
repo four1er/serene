@@ -18,54 +18,60 @@
 
 #include "serene/jit/halley.h"
 
-#include "serene/context.h" // for Seren...
+#include "serene/context.h"
 #include "serene/fs.h"
-#include "serene/options.h"     // for Options
-#include "serene/types/types.h" // for Names...
+#include "serene/options.h"
+#include "serene/types/types.h"
 
-#include <system_error> // for error...
+#include <gc/gc.h>
+#include <initializer_list>
+#include <system_error>
 
-#include <llvm/ADT/StringMapEntry.h> // for Strin...
+#include <llvm/ADT/StringMapEntry.h>
 #include <llvm/ADT/StringRef.h>
-#include <llvm/ADT/Triple.h>   // for Triple
-#include <llvm/ADT/iterator.h> // for itera...
+#include <llvm/ADT/Twine.h>
+#include <llvm/ADT/identity.h>
+#include <llvm/ADT/iterator.h>
 #include <llvm/BinaryFormat/Magic.h>
-#include <llvm/ExecutionEngine/JITEventListener.h> // for JITEv...
-#include <llvm/ExecutionEngine/Orc/CompileUtils.h> // for TMOwn...
-#include <llvm/ExecutionEngine/Orc/Core.h>         // for Execu...
-#include <llvm/ExecutionEngine/Orc/DebugUtils.h>   // for opera...
+#include <llvm/ExecutionEngine/JITEventListener.h>
+#include <llvm/ExecutionEngine/Orc/CompileUtils.h>
+#include <llvm/ExecutionEngine/Orc/Core.h>
+#include <llvm/ExecutionEngine/Orc/DebugUtils.h>
 #include <llvm/ExecutionEngine/Orc/EPCDynamicLibrarySearchGenerator.h>
-#include <llvm/ExecutionEngine/Orc/ExecutionUtils.h>          // for Dynam...
-#include <llvm/ExecutionEngine/Orc/IRCompileLayer.h>          // for IRCom...
-#include <llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h> // for JITTa...
-#include <llvm/ExecutionEngine/Orc/LLJIT.h>                   // for LLJIT...
+#include <llvm/ExecutionEngine/Orc/ExecutionUtils.h>
+#include <llvm/ExecutionEngine/Orc/ExecutorProcessControl.h>
+#include <llvm/ExecutionEngine/Orc/IRCompileLayer.h>
+#include <llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h>
+#include <llvm/ExecutionEngine/Orc/LLJIT.h>
+#include <llvm/ExecutionEngine/Orc/Layer.h>
 #include <llvm/ExecutionEngine/Orc/ObjectFileInterface.h>
-#include <llvm/ExecutionEngine/Orc/ObjectLinkingLayer.h>
-#include <llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h> // for RTDyl...
-#include <llvm/ExecutionEngine/Orc/ThreadSafeModule.h>         // for Threa...
-#include <llvm/ExecutionEngine/SectionMemoryManager.h>         // for Secti...
-#include <llvm/IR/DataLayout.h>                                // for DataL...
-#include <llvm/IR/LLVMContext.h>                               // for LLVMC...
-#include <llvm/IR/Module.h>                                    // for Module
+#include <llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h>
+#include <llvm/ExecutionEngine/Orc/Shared/ExecutorAddress.h>
+#include <llvm/ExecutionEngine/Orc/ThreadSafeModule.h>
+#include <llvm/ExecutionEngine/SectionMemoryManager.h>
+#include <llvm/IR/DataLayout.h>
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/Module.h>
 #include <llvm/IRReader/IRReader.h>
-#include <llvm/Support/CodeGen.h> // for Level
+#include <llvm/Support/CodeGen.h>
 #include <llvm/Support/Error.h>
 #include <llvm/Support/ErrorHandling.h>
-#include <llvm/Support/FileSystem.h>     // for OF_None
-#include <llvm/Support/FormatVariadic.h> // for formatv
+#include <llvm/Support/FileSystem.h>
+#include <llvm/Support/FormatVariadic.h>
+#include <llvm/Support/FormatVariadicDetails.h>
 #include <llvm/Support/MemoryBuffer.h>
 #include <llvm/Support/SourceMgr.h>
-#include <llvm/Support/ToolOutputFile.h> // for ToolO...
-#include <llvm/Support/raw_ostream.h>    // for raw_o...
+#include <llvm/Support/ToolOutputFile.h>
+#include <llvm/Support/raw_ostream.h>
+#include <llvm/TargetParser/Triple.h>
 
-#include <algorithm> // for max
-#include <assert.h>  // for assert
-#include <cerrno>
+#include <algorithm>
+#include <assert.h>
 #include <cstring>
-#include <gc.h>
-#include <memory>  // for uniqu...
-#include <string>  // for opera...
-#include <utility> // for move
+#include <memory>
+#include <string>
+#include <tuple>
+#include <utility>
 
 #define COMMON_ARGS_COUNT 8
 
