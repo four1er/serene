@@ -58,8 +58,16 @@ source "$ME/scripts/devfs.sh"
 # By default Clang is the compiler that we use and support. But you may use
 # whatever you want. But just be aware of the fact that we might not be able
 # to help you in case of any issue.
-CC="${CC:-clang}"
-CXX="${CXX:-clang++}"
+if [[ "$CC" = "" ]]; then
+    CC=$(which clang)
+    export CC
+fi
+if [[ "$CXX" = "" ]]; then
+    CXX=$(which clang++)
+    export CXX
+fi
+
+# Using LLD is a must
 LDFLAGS="-fuse-ld=lld"
 
 # The target architectures that we want to build Serene in and also we want
