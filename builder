@@ -110,7 +110,7 @@ CMAKEARGS_DEBUG=(
 
 CMAKEARGS=(
     "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
-    "-DCMAKE_CXX_FLAGS='-stdlib=libc++'"
+    "-DCMAKE_EXE_LINKER_FLAGS='-stdlib=libc++' -lc++abi"
     "-DSERENE_CCACHE_DIR=$HOME/.ccache"
 )
 
