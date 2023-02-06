@@ -38,7 +38,7 @@
 #
 # $ VERBOSE=ON ./builder build/
 #
-set -e
+set -xe
 
 command=$1
 VERSION="0.8.0"
@@ -59,11 +59,11 @@ source "$ME/scripts/devfs.sh"
 # whatever you want. But just be aware of the fact that we might not be able
 # to help you in case of any issue.
 if [[ "$CC" = "" ]]; then
-    CC=$(which clang)
+    CC=$(which clang || echo "Clang_not_found")
     export CC
 fi
 if [[ "$CXX" = "" ]]; then
-    CXX=$(which clang++)
+    CXX=$(which clang++ || echo "Clang++_not_found")
     export CXX
 fi
 
