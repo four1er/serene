@@ -38,7 +38,7 @@
 #
 # $ VERBOSE=ON ./builder build/
 #
-set -xe
+set -e
 
 command=$1
 VERSION="0.8.0"
