@@ -94,6 +94,21 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     -Wextra
     -Werror
     -Wpedantic
+    -Wabstract-final-class
+    -Walloca
+    -Warray-bounds-pointer-arithmetic
+    -Warray-parameter
+    -Wassign-enum
+    -Wconversion
+    -Wsign-conversion
+    -Wnon-virtual-dtor
+    -Wold-style-cast
+    -Wcast-align
+    -Wunused
+    -Woverloaded-virtual
+    -Wdouble-promotion
+    -Wformat=2
+
     -fno-rtti
     -fno-builtin-strlen
 
