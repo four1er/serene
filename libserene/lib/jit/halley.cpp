@@ -366,11 +366,12 @@ const types::InternalString &Halley::getInternalString(const char *s) {
   assert(s && "s is nullptr: getInternalString");
   auto len = std::strlen(s);
 
-  auto *str = (types::InternalString *)GC_MALLOC(sizeof(types::InternalString));
+  auto *str = static_cast<types::InternalString *>(
+      GC_MALLOC(sizeof(types::InternalString)));
 
   // str->data = (char *)GC_MALLOC_ATOMIC(len);
   // memcpy((void *)str->data, (void *)s, len);
-  memcpy((void *)str, (const void *)s, len);
+  memcpy(static_cast<void *>(str), static_cast<const void *>(s), len);
   str->len = len;
 
   stringStorage.push_back(str);
@@ -384,8 +385,9 @@ types::Namespace &Halley::makeNamespace(const char *name) {
   // randomly build instances here and there that causes unsafe memory
   assert(name && "name is nullptr: createNamespace");
   const auto &nsName = getInternalString(name);
-  auto *ns           = (types::Namespace *)GC_MALLOC(sizeof(types::Namespace));
-  ns->name           = &nsName;
+  auto *ns =
+      static_cast<types::Namespace *>(GC_MALLOC(sizeof(types::Namespace)));
+  ns->name = &nsName;
 
   nsStorage.push_back(ns);
   return *ns;
@@ -433,7 +435,7 @@ MaybeJitAddress Halley::lookup(const char *nsName, const char *sym) const {
     return tempError(*ctx, "No dylib " + s);
   }
 
-  HALLEY_LOG("Looking in dylib: " << (void *)dylib);
+  HALLEY_LOG("Looking in dylib: " << static_cast<void *>(dylib));
   auto expectedSymbol = engine->lookup(*dylib, fqsym);
 
   // JIT lookup may return an Error referring to strings stored internally by
@@ -452,7 +454,8 @@ MaybeJitAddress Halley::lookup(const char *nsName, const char *sym) const {
     return tempError(*ctx, "Lookup function is null!");
   }
 
-  HALLEY_LOG("Found symbol '" << fqsym << "' at " << (void *)fptr);
+  HALLEY_LOG("Found symbol '" << fqsym << "' at "
+                              << static_cast<void *>(&fptr));
   return fptr;
 };
 

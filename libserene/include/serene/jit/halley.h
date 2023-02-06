@@ -71,42 +71,22 @@
 
 namespace llvm {
 class DataLayout;
-} // namespace llvm
-namespace llvm {
 class JITEventListener;
-} // namespace llvm
-namespace llvm {
 class Module;
-} // namespace llvm
-namespace llvm {
 namespace orc {
 class JITDylib;
-}
+} // namespace orc
 } // namespace llvm
+
 namespace serene {
 namespace fs {
 enum class NSFileType;
-}
-} // namespace serene
-namespace serene {
-namespace jit {
-class Halley;
-}
-} // namespace serene
-namespace serene {
-namespace types {
-struct InternalString;
-}
-} // namespace serene
-namespace serene {
+} // namespace fs
 namespace types {
 struct Namespace;
-}
-} // namespace serene
-namespace serene {
-namespace types {
 struct Symbol;
-}
+struct InternalString;
+} // namespace types
 } // namespace serene
 
 #define HALLEY_LOG(...)                  \
@@ -117,7 +97,7 @@ struct Symbol;
 
 namespace serene {
 namespace jit {
-
+class Halley;
 // Why? This is the lazy man's way to make it easier to replace
 // the class under the hood later on to test different implementaion
 // with the same interface

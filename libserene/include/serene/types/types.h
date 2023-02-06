@@ -19,6 +19,7 @@
 #ifndef SERENE_TYPES_TYPE_H
 #define SERENE_TYPES_TYPE_H
 
+#include <cstddef>
 namespace serene::types {
 
 // ============================================================================
@@ -38,7 +39,7 @@ struct Expression {
 struct InternalString {
   // We store the actual string in a "string" data section
   const char *data;
-  unsigned int len;
+  size_t len;
 
   InternalString(const char *data, const unsigned int len)
       : data(data), len(len){};

@@ -38,6 +38,7 @@
 #include <llvm/IR/Value.h>           // for Value
 #include <llvm/Support/Casting.h>    // for cast
 
+#include <stdint.h> // for uint64_t
 namespace serene::jit {
 
 std::string makePackedFunctionName(llvm::StringRef name) {
@@ -75,7 +76,8 @@ void packFunctionArguments(llvm::Module *module) {
     builder.SetInsertPoint(bb);
     llvm::Value *argList = interfaceFunc->arg_begin();
     llvm::SmallVector<llvm::Value *, COMMON_ARGS_COUNT> args;
-    args.reserve(llvm::size(func.args()));
+
+    args.reserve(static_cast<unsigned long>(llvm::size(func.args())));
     for (const auto &indexedArg : llvm::enumerate(func.args())) {
       llvm::Value *argIndex = llvm::Constant::getIntegerValue(
           builder.getInt64Ty(), llvm::APInt(I64_SIZE, indexedArg.index()));
@@ -95,7 +97,9 @@ void packFunctionArguments(llvm::Module *module) {
     // Assuming the result is one value, potentially of type `void`.
     if (!result->getType()->isVoidTy()) {
       llvm::Value *retIndex = llvm::Constant::getIntegerValue(
-          builder.getInt64Ty(), llvm::APInt(I64_SIZE, llvm::size(func.args())));
+          builder.getInt64Ty(),
+          llvm::APInt(I64_SIZE,
+                      static_cast<uint64_t>(llvm::size(func.args()))));
       llvm::Value *retPtrPtr =
           builder.CreateGEP(builder.getInt8PtrTy(), argList, retIndex);
       llvm::Value *retPtr =

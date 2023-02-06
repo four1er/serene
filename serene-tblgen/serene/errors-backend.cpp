@@ -103,14 +103,15 @@ void ErrorsBackend::createNSBody(llvm::raw_ostream &os) {
   os << "#ifdef GET_CLASS_DEFS\n";
   inNamespace("serene::errors", os, [&](llvm::raw_ostream &os) {
     os << "enum ErrorType {\n";
-    for (size_t i = 0; i < indexList->size(); i++) {
+    for (unsigned int i = 0; i < static_cast<unsigned int>(indexList->size());
+         i++) {
       llvm::Record *defRec = indexList->getElementAsRecord(i);
 
       if (!defRec->isSubClassOf("Error")) {
         continue;
       }
 
-      createErrorClass(i, *defRec, os);
+      createErrorClass(static_cast<int>(i), *defRec, os);
     }
     os << "};\n\n";
 
@@ -119,8 +120,9 @@ void ErrorsBackend::createNSBody(llvm::raw_ostream &os) {
        << "] = {\n";
 
     for (size_t i = 0; i < indexList->size(); i++) {
-      llvm::Record *defRec = indexList->getElementAsRecord(i);
-      auto recName         = defRec->getName();
+      llvm::Record *defRec =
+          indexList->getElementAsRecord(static_cast<unsigned int>(i));
+      auto recName = defRec->getName();
 
       if (!defRec->isSubClassOf("Error")) {
         continue;

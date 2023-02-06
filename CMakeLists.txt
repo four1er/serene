@@ -99,7 +99,6 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     -Warray-bounds-pointer-arithmetic
     -Warray-parameter
     -Wassign-enum
-    -Wconversion
     -Wsign-conversion
     -Wnon-virtual-dtor
     -Wold-style-cast
