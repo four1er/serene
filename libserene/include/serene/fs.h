@@ -19,13 +19,9 @@
 #ifndef SERENE_FS_H
 #define SERENE_FS_H
 
-#include <llvm/ADT/SmallString.h>
-#include <llvm/ADT/SmallVector.h>
-#include <llvm/ADT/StringRef.h>
-#include <llvm/Support/FileSystem.h>
-#include <llvm/Support/Path.h>
+#include <llvm/ADT/StringRef.h> // for StringRef
 
-#include <filesystem>
+#include <string> // for string
 
 #define MAX_PATH_SLOTS 256
 

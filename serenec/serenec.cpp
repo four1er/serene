@@ -16,10 +16,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "serene/config.h"
-#include "serene/context.h"
-#include "serene/serene.h"
-#include "serene/types/types.h"
+#include "serene/config.h"      // for SERENE_VERSION
+#include "serene/jit/halley.h"  // for Halley
+#include "serene/options.h"     // for serene
+#include "serene/serene.h"      // for applySereneCLOptions
+#include "serene/types/types.h" // for InternalString
+
+#include <llvm/Support/CommandLine.h>           // for ParseCommandLineOptions
+#include <llvm/Support/Error.h>                 // for operator<<, Error
+#include <llvm/Support/FormatVariadic.h>        // for formatv, formatv_object
+#include <llvm/Support/FormatVariadicDetails.h> // for provider_format_adapter
+#include <llvm/Support/raw_ostream.h>           // for errs, raw_ostream
+
+#include <memory> // for allocator, unique_ptr
+#include <string> // for string
+#include <tuple>  // for tuple
 
 // #include "serene/jit/halley.h"
 // #include "serene/namespace.h"
@@ -41,11 +52,8 @@
 // #include <llvm/ADT/StringRef.h>
 // #include <llvm/IR/LegacyPassManager.h>
 // //#include <llvm/MC/TargetRegistry.h>
-#include <llvm/Support/CommandLine.h>
 // #include <llvm/Support/FileSystem.h>
-#include <llvm/Support/FormatVariadic.h>
 
-#include <iostream>
 // #include <llvm/Support/Host.h>
 // #include <llvm/Support/Path.h>
 // #include <llvm/Support/raw_ostream.h>

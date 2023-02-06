@@ -18,9 +18,25 @@
 
 #include "serene/jit/packer.h"
 
-#include "serene/config.h"
+#include "serene/config.h" // for I64_SIZE, COMMON_ARGS_COUNT
 
-#include <llvm/IR/IRBuilder.h>
+#include <llvm/ADT/APInt.h>          // for APInt
+#include <llvm/ADT/DenseSet.h>       // for DenseSet
+#include <llvm/ADT/STLExtras.h>      // for size, enumerate, enumerator
+#include <llvm/ADT/ilist_iterator.h> // for operator!=, ilist_iterator
+#include <llvm/ADT/iterator.h>       // for iterator_facade_base
+#include <llvm/ADT/iterator_range.h> // for iterator_range
+#include <llvm/IR/Argument.h>        // for Argument
+#include <llvm/IR/BasicBlock.h>      // for BasicBlock
+#include <llvm/IR/Constant.h>        // for Constant
+#include <llvm/IR/DerivedTypes.h>    // for PointerType, IntegerType, Funct...
+#include <llvm/IR/Function.h>        // for Function
+#include <llvm/IR/IRBuilder.h>       // for IRBuilder
+#include <llvm/IR/Instructions.h>    // for LoadInst, CallInst
+#include <llvm/IR/Module.h>          // for Module
+#include <llvm/IR/Type.h>            // for Type
+#include <llvm/IR/Value.h>           // for Value
+#include <llvm/Support/Casting.h>    // for cast
 
 namespace serene::jit {
 

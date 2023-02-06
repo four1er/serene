@@ -15,19 +15,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 #include "serene/serene.h"
 
 #include "serene/context.h"    // for SereneContext, makeSereneCon...
 #include "serene/jit/halley.h" // for makeHalleyJIT, Engine, Maybe...
 
 #include <llvm/ADT/StringRef.h>         // for StringRef
-#include <llvm/Support/CommandLine.h>   // for list, cat, desc, MiscFlags
+#include <llvm/Support/CommandLine.h>   // for list, MiscFlags, cat, desc
 #include <llvm/Support/ManagedStatic.h> // for ManagedStatic
 #include <llvm/Support/TargetSelect.h>  // for InitializeAllAsmParsers, Ini...
 
 #include <string>  // for string
 #include <utility> // for move
+#include <vector>  // for vector
 
 namespace serene {
 // CLI Option ----------------

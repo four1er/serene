@@ -18,9 +18,15 @@
 
 #include "serene/fs.h"
 
-#include "serene/context.h"
+#include <system_error> // for error_code
 
-#include <llvm/BinaryFormat/Magic.h>
+#include <llvm/ADT/SmallString.h>    // for SmallString
+#include <llvm/ADT/Twine.h>          // for Twine
+#include <llvm/BinaryFormat/Magic.h> // for file_magic, identify_magic
+#include <llvm/Support/FileSystem.h> // for exists, status, file_status
+#include <llvm/Support/Path.h>       // for native, get_separator
+
+#include <algorithm> // for replace
 
 namespace serene::fs {
 

@@ -19,21 +19,18 @@
 #ifndef SERENE_CONTEXT_H
 #define SERENE_CONTEXT_H
 
-#include "serene/export.h" // for SERENE_EXPORT
-#include "serene/options.h"
+#include "serene/export.h"  // for SERENE_EXPORT
+#include "serene/options.h" // for Options
 
-#include <llvm/ADT/Triple.h>     // for Triple
-#include <llvm/ADT/Twine.h>      // for Twine
-#include <llvm/IR/LLVMContext.h> // for LLVMContext
-#include <llvm/Support/Host.h>   // for getDefaultTargetTriple
+#include <llvm/ADT/Twine.h>           // for Twine
+#include <llvm/IR/LLVMContext.h>      // for LLVMContext
+#include <llvm/TargetParser/Host.h>   // for getDefaultTargetTriple
+#include <llvm/TargetParser/Triple.h> // for Triple
 
 #include <functional> // for function
 #include <memory>     // for make_unique, unique_ptr
-#include <string>     // for string, basic_string
+#include <string>     // for basic_string, string
 #include <vector>     // for vector
-
-#define DEFAULT_NS_NAME "serene.user"
-#define INTERNAL_NS     "serene.internal"
 
 namespace serene {
 class SereneContext;
