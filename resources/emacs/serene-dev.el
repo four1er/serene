@@ -1,6 +1,6 @@
 ;;; serene-dev --- Serene's development lib for Emacs users -*- lexical-binding: t; -*-
 ;;
-;; Copyright (c) 2019-2022 Sameer Rahmani
+;; Copyright (c) 2019-2023 Sameer Rahmani
 ;;
 ;; Author: Sameer Rahmani <lxsameer@gnu.org>
 ;; URL: https://serene-lang.org

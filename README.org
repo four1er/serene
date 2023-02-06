@@ -123,7 +123,7 @@ break point on the ~main~ function (~b main~) then use the following commands on
   - [[https://github.com/muqsitnawaz/modern-cpp-cheatsheet][Modern C++ Cheatsheet]]
 
 * License
-Copyright (c) 2019-2022 Sameer Rahmani <lxsameer@gnu.org>
+Copyright (c) 2019-2023 Sameer Rahmani <lxsameer@gnu.org>
 
 *Serene* is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

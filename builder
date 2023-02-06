@@ -1,7 +1,7 @@
 #! /bin/bash
 # Serene Programming Language
 #
-# Copyright (c) 2019-2022 Sameer Rahmani <lxsameer@gnu.org>
+# Copyright (c) 2019-2023 Sameer Rahmani <lxsameer@gnu.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -461,7 +461,7 @@ function help() { ## Print out this help message
 # Main logic
 # -----------------------------------------------------------------------------
 echo -e "\nSerene  Builder Version $VERSION"
-echo -e "\nCopyright (C) 2019-2022"
+echo -e "\nCopyright (C) 2019-2023"
 echo -e "Sameer Rahmani <lxsameer@gnu.org>"
 echo -e "Serene comes with ABSOLUTELY NO WARRANTY;"
 echo -e "This is free software, and you are welcome"

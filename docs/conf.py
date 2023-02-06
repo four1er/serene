@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'Serene'
-copyright = '2019-2022, Sameer Rahmani'
+copyright = '2019-2023, Sameer Rahmani'
 author = 'Sameer Rahmani'
 
 # The full version, including alpha/beta/rc tags
