@@ -155,8 +155,8 @@ function popd_build() {
 function build-gen() {
     pushed_build
     info "Running: "
-    info "cmake -G Ninja ${CMAKEARGS[*]} ${CMAKEARGS_DEBUG[*]}" "$@" "$ME"
-    cmake -G Ninja "${CMAKEARGS[@]}" "${CMAKEARGS_DEBUG[@]}" "$@" "$ME"
+    info "cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=$ME/cmake/toolchains/linux.cmake" "$ME" "${CMAKEARGS[*]} ${CMAKEARGS_DEBUG[*]}" "$@"
+    cmake -G Ninja "-DCMAKE_TOOLCHAIN_FILE=$ME/cmake/toolchains/linux.cmake" "$ME" "${CMAKEARGS[@]}" "${CMAKEARGS_DEBUG[@]}" "$@"
     popd_build
 }
 
