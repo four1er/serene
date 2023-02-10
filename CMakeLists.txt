@@ -42,6 +42,14 @@ option(SERENE_ENABLE_DOCS "Enable document generation" OFF)
 option(SERENE_ENABLE_TIDY "Enable clang tidy check" OFF)
 option(SERENE_DISABLE_CCACHE "Disable automatic ccache integration" OFF)
 option(SERENE_ENABLE_DEVTOOLS "Enable the devtools build" OFF)
+option(SERENE_USE_LIBCXX
+  "Use libc++ instead of the default (The deafault might be libc++ as well)"
+  OFF)
+set(SERENE_TOOLCHAIN_PATH
+  ""
+  CACHE
+  STRING
+  "Path to the LLVM build. If empty will use the the default on the platform.")
 
 # libserene
 option(SERENE_SHARED_LIB "Build libserene as a shared library" ON)
@@ -87,6 +95,10 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 
   # Let's nicely support folders in IDEs
   set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+  find_package(BDWgc 8.2.0 REQUIRED)
+  find_program(LLD_PROGRAM REQUIRED NAMES lld)
+  find_program(MLIRTBLGEN_PROGRAM REQUIRED NAMES mlir-tblgen)
 
   # Setup the basic compiler flags
   add_compile_options(
@@ -144,6 +156,14 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     #--static
     )
 
+  if ((SERENE_USE_LIBCXX) AND (NOT (SERENE_TOOLCHAIN_PATH)))
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -v")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lc++abi")
+  endif()
+
+  if ((SERENE_USE_LIBCXX) AND (SERENE_TOOLCHAIN_PATH))
+  endif()
+
   if (SERENE_USE_COMPILER_RT)
     add_link_options(-rtlib=compiler-rt -stdlib=libc++ )
   endif()
@@ -153,10 +173,6 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     set(BUILD_SHARED_LIBS "${SERENE_SHARED_LIB}")
   endif()
 
-  find_package(BDWgc 8.2.0 REQUIRED)
-
-  find_program(LLD_PROGRAM REQUIRED NAMES lld)
-  find_program(MLIRTBLGEN_PROGRAM REQUIRED NAMES mlir-tblgen)
 
   if(SERENE_ENABLE_BUILDID)
     add_link_options(-Wl,--build-id)

@@ -103,6 +103,9 @@ export ASAN_OPTIONS
 LSAN_OPTIONS=suppressions="$ME/.ignore_sanitize"
 export LSAN_OPTIONS
 
+# shellcheck source=./scripts/deps.sh
+source "$ME/scripts/deps.sh"
+
 
 CMAKEARGS_DEBUG=(
     "-DCMAKE_BUILD_TYPE=Debug"
@@ -110,12 +113,11 @@ CMAKEARGS_DEBUG=(
 
 CMAKEARGS=(
     "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
-    "-DCMAKE_EXE_LINKER_FLAGS='-stdlib=libc++' -lc++abi"
+    "-DSERENE_USE_LIBCXX=ON"
+    "-DSERENE_TOOLCHAIN_PATH=$LLVM_INSTALL_DIR"
     "-DSERENE_CCACHE_DIR=$HOME/.ccache"
 )
 
-# shellcheck source=./scripts/deps.sh
-source "$ME/scripts/deps.sh"
 
 # -----------------------------------------------------------------------------
 # Initialization
@@ -154,7 +156,7 @@ function build-gen() {
     pushed_build
     info "Running: "
     info "cmake -G Ninja ${CMAKEARGS[*]} ${CMAKEARGS_DEBUG[*]}" "$@" "$ME"
-    cmake -G Ninja "${CMAKEARGS[*]} ${CMAKEARGS_DEBUG[*]}" "$@" "$ME"
+    cmake -G Ninja "${CMAKEARGS[@]}" "${CMAKEARGS_DEBUG[@]}" "$@" "$ME"
     popd_build
 }
 
