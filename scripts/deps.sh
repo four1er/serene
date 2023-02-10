@@ -76,6 +76,10 @@ function build_toolchain() { ## Build LLVM and the toolchain
           "$LLVM_SOURCE_DIR"
 
     cmake --build . --parallel
+    cmake --build . --target check-mlir
+    cmake --build . --target check-cxx
+    cmake --build . --target check-cxxabi
+    cmake --build . --target check-unwind
     cmake -DCMAKE_INSTALL_PREFIX="$LLVM_INSTALL_DIR" -P cmake_install.cmake
     _pop
     info_toolchain
