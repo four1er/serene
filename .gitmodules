@@ -1,12 +1,4 @@
-[submodule "deps/llvm-project"]
-	path = deps/llvm-project
-	url = https://github.com/llvm/llvm-project.git
-
 [submodule "deps/bdwgc"]
 	path = deps/bdwgc
 	url = https://github.com/ivmai/bdwgc.git
 	branch = release-8_2
-
-[submodule "deps/include-what-you-use"]
-	path = deps/include-what-you-use
-	url = https://beta.devheroes.codes/Serene/include-what-you-use.git
