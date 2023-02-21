@@ -25,27 +25,71 @@
 # shellcheck source=/dev/null
 source "scripts/utils.sh"
 
+# Where to clone the dependencies
+DEPS_SOURCE_DIR="$SERENE_HOME_DIR/src"
+
 LLVM_DIR_NAME="llvm"
-LLVM_DIR="$ME/deps/llvm-project"
-LLVM_SOURCE_DIR="$LLVM_DIR/$LLVM_DIR_NAME"
 LLVM_BUILD_DIR="$DEPS_BUILD_DIR/${LLVM_DIR_NAME}_build"
-LLVM_INSTALL_DIR="$DEPS_BUILD_DIR/$LLVM_DIR_NAME.$(get_version "$LLVM_DIR")"
+LLVM_INSTALL_DIR="$DEPS_BUILD_DIR/$LLVM_DIR_NAME.$LLVM_VERSION"
 
 BDWGC_DIR_NAME="bdwgc"
-BDWGC_SOURCE_DIR="$ME/deps/$BDWGC_DIR_NAME"
 BDWGC_BUILD_DIR="$DEPS_BUILD_DIR/${BDWGC_DIR_NAME}_build"
-BDWGC_INSTALL_DIR="$DEPS_BUILD_DIR/$BDWGC_DIR_NAME.$(get_version "$BDWGC_SOURCE_DIR")"
-
-IWYU_DIR="$ME/deps/include-what-you-use"
+BDWGC_INSTALL_DIR="$DEPS_BUILD_DIR/$BDWGC_DIR_NAME.$BDWGC_VERSION"
 
 ZSTD_CLI="zstd --ultra -22 -T$(nproc)"
 
-function build_toolchain() { ## Build LLVM and the toolchain
+function fetch_source() {
+    local dest
+    local repo
     local version
-    version=$(get_version "$LLVM_DIR")
+    repo="$1"
+    version="$2"
+    dest="$3"
+}
+
+function clone_dep() {
+    local dest
+    local repo
+    local version
+    repo="$1"
+    version="$2"
+    dest="$3"
+
+    if [[ -d "$dest" ]]; then
+        return
+    fi
+
+    #mkdir -p "$dest"
+
+    #git init -b master
+    git clone --depth=1 "$repo" "$dest"
+    _push "$dest"
+    #git remote add origin "$repo"
+    git fetch --depth=1 --filter=tree:0 origin "$version"
+    git reset --hard FETCH_HEAD
+    _pop
+}
+
+function build_toolchain() {
+    local version
+    local repo
+    local iwyu_repo
+    local src
+    local iwyu_src
+    # Why? It might seem pointless but this way it make it easier
+    # to move to a different ways to get the version. Believe me
+    # I did it few times.
+    version="$LLVM_VERSION"
+    repo="${LLVM_REPO:-https://github.com/llvm/llvm-project.git}"
+    iwyu_repo="${IWUY_REPO:-https://github.com/include-what-you-use/include-what-you-use.git}"
+
+    src="$DEPS_SOURCE_DIR/$LLVM_DIR_NAME.$version"
+    iwyu_src="$DEPS_SOURCE_DIR/iwyu.$IWYU_VERSION"
+
+    clone_dep "$repo" "$LLVM_VERSION" "$src"
+    clone_dep "$iwyu_repo" "$IWYU_VERSION" "$iwyu_src"
 
     info "Building the toolchain version '$version'..."
-
     if [[ -d "$LLVM_BUILD_DIR.$version" ]]; then
         warn "A build dir for 'llvm' already exists at '$LLVM_BUILD_DIR.$version'"
     fi
@@ -64,7 +108,7 @@ function build_toolchain() { ## Build LLVM and the toolchain
           -DLLVM_TARGETS_TO_BUILD="$TARGET_ARCHS" \
           -DCMAKE_BUILD_TYPE=Release \
           -DLLVM_EXTERNAL_PROJECTS=iwyu \
-          -DLLVM_EXTERNAL_IWYU_SOURCE_DIR="$IWYU_DIR" \
+          -DLLVM_EXTERNAL_IWYU_SOURCE_DIR="$iwyu_src" \
           -DLLVM_ENABLE_ASSERTIONS=ON \
           -DLLVM_CCACHE_BUILD=ON \
           -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
@@ -73,7 +117,7 @@ function build_toolchain() { ## Build LLVM and the toolchain
           -DCMAKE_C_COMPILER="$CC" \
           -DCMAKE_CXX_COMPILER="$CXX" \
           -DLLVM_ENABLE_LLD=ON \
-          "$LLVM_SOURCE_DIR"
+          "$src/llvm"
 
     cmake --build . --parallel
     cmake --build . --target check-mlir
@@ -87,7 +131,7 @@ function build_toolchain() { ## Build LLVM and the toolchain
 
 function package_toolchain() { ## Packages the built toolchain
     local version
-    version=$(get_version "$LLVM_DIR")
+    version="$LLVM_VERSION"
 
     if [ ! -d "$LLVM_INSTALL_DIR" ]; then
         error "No installation directory is found at: '$LLVM_INSTALL_DIR'"
@@ -104,7 +148,7 @@ function package_toolchain() { ## Packages the built toolchain
 
 function push_toolchain() { ## Push the toolchain to the package repository
     local version
-    version=$(get_version "$LLVM_DIR")
+    version="$LLVM_VERSION"
 
     if [ ! -f "$LLVM_INSTALL_DIR.zstd" ]; then
         error "No package is found at: '$LLVM_INSTALL_DIR.zstd'"
@@ -121,7 +165,7 @@ function push_toolchain() { ## Push the toolchain to the package repository
 
 function pull_toolchain() {
     local version
-    version=$(get_version "$LLVM_DIR")
+    version="$LLVM_VERSION"
 
     info "Pulling the toolchain version '$version'..."
 
@@ -145,12 +189,12 @@ function pull_toolchain() {
 }
 
 get_toolchain_version() {
-    get_version "$LLVM_DIR"
+    echo "$LLVM_VESRION"
 }
 
 function info_toolchain() {
     local version
-    version=$(get_version "$LLVM_DIR")
+    version="$LLVM_VERSION"
 
     info "To activate toolchain version '$version' add the following env variable to your shell:"
 
@@ -159,10 +203,14 @@ function info_toolchain() {
 
 function build_bdwgc() { ## Builds the BDW GC
     local version
-    version=$(get_version "$BDWGC_SOURCE_DIR")
+    version="$BDWGC_VERSION"
+
+    repo="${BDWGC_REPO:-https://github.com/ivmai/bdwgc.git}"
+    src="$DEPS_SOURCE_DIR/$BDWGC_DIR_NAME.$version"
+
+    clone_dep "$repo" "$version" "$src"
 
     info "Building the BDWGC version '$version'..."
-
     if [[ -d "$BDWGC_BUILD_DIR.$version" ]]; then
         warn "A build dir for 'BDWGC' already exists at '$BDWGC_BUILD_DIR.$version'"
         warn "Skipping..."
@@ -189,7 +237,6 @@ function build_bdwgc() { ## Builds the BDW GC
           -Denable_java_finalization=OFF \
           -Denable_munmap=ON \
           -Denable_parallel_mark=ON \
-          -Denable_register_main_static_da=ON \
           -Denable_thread_local_alloc=ON \
           -Denable_threads=ON \
           -Denable_threads_discovery=ON \
@@ -197,7 +244,7 @@ function build_bdwgc() { ## Builds the BDW GC
           -Dinstall_headers=ON \
           -DCMAKE_C_COMPILER="$CC" \
           -DCMAKE_CXX_COMPILER="$CXX" \
-          "$BDWGC_SOURCE_DIR"
+          "$src"
 
     cmake --build . --parallel
     cmake -DCMAKE_INSTALL_PREFIX="$BDWGC_INSTALL_DIR" -P cmake_install.cmake
@@ -208,7 +255,7 @@ function build_bdwgc() { ## Builds the BDW GC
 
 function package_bdwgc() { ## Packages the built toolchain
     local version
-    version=$(get_version "$BDWGC_SOURCE_DIR")
+    version="$BDWGC_VERSION"
 
     if [ ! -d "$BDWGC_INSTALL_DIR" ]; then
         error "No installation directory is found at: '$BDWGC_INSTALL_DIR'"
@@ -224,12 +271,12 @@ function package_bdwgc() { ## Packages the built toolchain
 }
 
 function get_bdwgc_version {
-    get_version "$BDWGC_SOURCE_DIR"
+    echo "$BDWGC_VERSION"
 }
 
 function push_bdwgc() { ## Push the BDWGC package to the package repository
     local version
-    version=$(get_version "$BDWGC_SOURCE_DIR")
+    version="$BDWGC_VERSION"
 
     if [ ! -f "$BDWGC_INSTALL_DIR.zstd" ]; then
         error "No package is found at: '$BDWGC_INSTALL_DIR.zstd'"
@@ -246,7 +293,7 @@ function push_bdwgc() { ## Push the BDWGC package to the package repository
 
 function pull_bdwgc() {
     local version
-    version=$(get_version "$BDWGC_SOURCE_DIR")
+    version="$BDWGC_VERSION"
 
     info "Pulling the BDWGC version '$version'..."
 
@@ -274,7 +321,7 @@ function pull_bdwgc() {
 
 function info_bdwgc() {
     local version
-    version=$(get_version "$BDWGC_SOURCE_DIR")
+    version="$BDWGC_VERSION"
 
     info "To activate BDWGC version '$version' add the following env variable to your shell:"
     info "export BDWgc_DIR='$BDWGC_INSTALL_DIR/lib64/cmake/bdwgc'"

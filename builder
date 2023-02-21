@@ -41,7 +41,7 @@
 set -e
 
 command=$1
-VERSION="0.8.0"
+VERSION="0.9.0"
 
 ME=$(cd "$(dirname "$0")/." >/dev/null 2>&1 ; pwd -P)
 
@@ -50,6 +50,27 @@ source "$ME/scripts/utils.sh"
 
 # shellcheck source=./scripts/devfs.sh
 source "$ME/scripts/devfs.sh"
+
+# -----------------------------------------------------------------------------
+# Dependencies
+# -----------------------------------------------------------------------------
+# All the versions in this section are git refs.
+# These dependencies handled by the builder script separately, meaning that
+# during the build process of Serene, these dependencies must be present but
+# the builder script will not build them as part of the build process. They
+# can be built using the `builder deps` subcommand.
+LLVM_VERSION="0af67d167d6c811abf12ad6c27ee34ec1365e5fb"
+export LLVM_VERSION
+
+IWUY_VERSION="435ad9d35ceee7759ea8f8fd658579e979ee5146"
+export IWUY_VERSION
+
+BDWGC_VERSION="release-8_2"
+export BDWGC_VERSION
+
+MUSL_VERSION="v1.2.3"
+export MUSL_VERSION
+
 
 # -----------------------------------------------------------------------------
 # CONFIG VARS
@@ -67,9 +88,6 @@ if [[ "$CXX" = "" ]]; then
     export CXX
 fi
 
-# Using LLD is a must
-LDFLAGS="-fuse-ld=lld"
-
 # The target architectures that we want to build Serene in and also we want
 # serene to support. We use this variable when we're building the llvm
 TARGET_ARCHS="X86;AArch64;AMDGPU;ARM;RISCV;WebAssembly"
@@ -83,15 +101,15 @@ export BUILD_DIR_NAME
 BUILD_DIR="$ME/$BUILD_DIR_NAME"
 export BUILD_DIR
 
-DEPS_BUILD_DIR="$HOME/.serene/env"
+SERENE_HOME_DIR="$HOME/.serene"
+export SERENE_HOME_DIR
+
+DEPS_BUILD_DIR="$SERENE_HOME_DIR/env"
 export DEPS_BUILD_DIR
 
 # Serene subprojects. We use this array to run common tasks on all the projects
 # like running the test cases
 PROJECTS=(libserene serenec serene-repl serene-tblgen)
-
-# TODO: Remove this
-LLVM_VERSION="11"
 
 # TODO: Add sloppiness to the cmake list file as well
 CCACHE_SLOPPINESS="pch_defines,time_macros"
@@ -113,8 +131,6 @@ CMAKEARGS_DEBUG=(
 
 CMAKEARGS=(
     "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
-    "-DSERENE_USE_LIBCXX=ON"
-    "-DSERENE_TOOLCHAIN_PATH=$LLVM_INSTALL_DIR"
     "-DSERENE_CCACHE_DIR=$HOME/.ccache"
 )
 
