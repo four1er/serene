@@ -36,6 +36,10 @@ BDWGC_DIR_NAME="bdwgc"
 BDWGC_BUILD_DIR="$DEPS_BUILD_DIR/${BDWGC_DIR_NAME}_build"
 BDWGC_INSTALL_DIR="$DEPS_BUILD_DIR/$BDWGC_DIR_NAME.$BDWGC_VERSION"
 
+MUSL_DIR_NAME="musl"
+MUSL_BUILD_DIR="$DEPS_BUILD_DIR/${MUSL_DIR_NAME}_build"
+MUSL_INSTALL_DIR="$DEPS_BUILD_DIR/$MUSL_DIR_NAME.$MUSL_VERSION"
+
 ZSTD_CLI="zstd --ultra -22 -T$(nproc)"
 
 function fetch_source() {
@@ -325,6 +329,111 @@ function info_bdwgc() {
 
     info "To activate BDWGC version '$version' add the following env variable to your shell:"
     info "export BDWgc_DIR='$BDWGC_INSTALL_DIR/lib64/cmake/bdwgc'"
+}
+
+function build_musl() {
+    local version
+    local repo
+    local src
+
+    version="$MUSL_VERSION"
+    repo="${MUSL_REPO:-git://git.musl-libc.org/musl}"
+    src="$DEPS_SOURCE_DIR/$MUSL_DIR_NAME.$version"
+
+    clone_dep "$repo" "$version" "$src"
+
+    info "Building musl version '$version'..."
+    if [[ -d "$MUSL_BUILD_DIR.$version" ]]; then
+        warn "A build dir for 'musl' already exists at '$MUSL_BUILD_DIR.$version'"
+        warn "Cleaning up..."
+        rm -rf "$MUSL_BUILD_DIR.$version"
+    fi
+
+    info "Copy the source to the build directory at: '$MUSL_BUILD_DIR.$version'"
+    cp -r "$src" "$MUSL_BUILD_DIR.$version"
+
+    mkdir -p "$MUSL_INSTALL_DIR"
+
+    _push "$MUSL_BUILD_DIR.$version"
+    ./configure --disable-shared --prefix="$MUSL_INSTALL_DIR"
+
+    make -j "$(nproc)"
+    make install
+    _pop
+    info_musl
+}
+
+function info_musl() {
+    local version
+    version="$MUSL_VERSION"
+
+    info "'musl' version '$MUSL_VERSION' installed at '$MUSL_INSTALL_DIR'"
+}
+
+function package_musl() { ## Packages the built toolchain
+    local version
+    version="$MUSL_VERSION"
+
+    if [ ! -d "$MUSL_INSTALL_DIR" ]; then
+        error "No installation directory is found at: '$MUSL_INSTALL_DIR'"
+        exit 1
+    fi
+
+    info "Packaging the musl version '$version'..."
+    _push "$DEPS_BUILD_DIR"
+    local pkg
+    pkg="$MUSL_DIR_NAME.$version"
+    time tar -I "$ZSTD_CLI" -cf "$pkg.zstd" "$pkg"
+    _pop
+}
+
+function get_musl_version {
+    echo "$MUSL_VERSION"
+}
+
+function push_musl() {
+    local version
+    version="$MUSL_VERSION"
+
+    if [ ! -f "$MUSL_INSTALL_DIR.zstd" ]; then
+        error "No package is found at: '$MUSL_INSTALL_DIR.zstd'"
+        exit 1
+    fi
+
+    info "Pushing the musl package version '$version'..."
+    _push "$DEPS_BUILD_DIR"
+    http_push "$MUSL_DIR_NAME" "$version"
+    echo ""
+    info "Done"
+    _pop
+}
+
+function pull_musl() {
+    local version
+    version="$MUSL_VERSION"
+
+    info "Pulling the musl version '$version'..."
+
+    if [ -f "$MUSL_INSTALL_DIR.zstd" ]; then
+        warn "The package is already in the cache at: '$MUSL_INSTALL_DIR.zstd'"
+        return
+    fi
+
+    _push "$DEPS_BUILD_DIR"
+
+    if http_pull "$MUSL_DIR_NAME" "$version" "$MUSL_INSTALL_DIR.zstd"; then
+        info "Unpacking '$MUSL_INSTALL_DIR.zstd'..."
+        unpack "$MUSL_INSTALL_DIR.zstd"
+        echo ""
+        info "Done"
+    else
+        echo ""
+        error "Can't find the package."
+        exit 4
+    fi
+    _pop
+
+    info_musl
 }
 
 function manage_dependencies() {
