@@ -1,0 +1,148 @@
+# Serene Programming Language
+#
+# Copyright (c) 2019-2023 Sameer Rahmani <lxsameer@gnu.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# LLVM setup =========================================
+# Why not specify the version?
+# Since we use the development version of the LLVM all the time it doesn't
+# make sense to use a version here
+find_package(LLVM REQUIRED CONFIG)
+find_package(MLIR REQUIRED CONFIG)
+find_package(LLD REQUIRED CONFIG)
+#find_package(CLANG REQUIRED CONFIG)
+
+message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
+message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
+message(STATUS "Using MLIRConfig.cmake in: ${MLIR_DIR}")
+message(STATUS "Using LLDConfig.cmake in: ${LLD_DIR}")
+#message(STATUS "Using CLANGConfig.cmake in: ${CLANG_DIR}")
+
+set(LLVM_RUNTIME_OUTPUT_INTDIR ${CMAKE_BINARY_DIR}/bin)
+set(LLVM_LIBRARY_OUTPUT_INTDIR ${CMAKE_BINARY_DIR}/lib)
+set(MLIR_BINARY_DIR ${CMAKE_BINARY_DIR})
+
+list(APPEND CMAKE_MODULE_PATH "${MLIR_CMAKE_DIR}")
+list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
+list(APPEND CMAKE_MODULE_PATH "${LLD_CMAKE_DIR}")
+
+include(TableGen)
+include(AddLLVM)
+include(AddMLIR)
+include(HandleLLVMOptions)
+
+add_executable(serene)
+
+set_target_properties(serene PROPERTIES
+  VERSION ${PROJECT_VERSION}
+  SOVERSION ${PROJECT_VERSION_MAJOR}
+  # Warn on unused libs
+  LINK_WHAT_YOU_USE TRUE
+  # LTO support
+  INTERPROCEDURAL_OPTIMIZATION TRUE)
+
+if (CPP_20_SUPPORT)
+  target_compile_features(serene PRIVATE cxx_std_20)
+else()
+  target_compile_features(serene PRIVATE cxx_std_17)
+endif()
+
+# Setup header directory and auto generated headers
+target_include_directories(serene
+  PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+# We don't want the generated files from table gen
+# to be treated as local since the contain warnings
+target_include_directories(serene SYSTEM PRIVATE ${PROJECT_BINARY_DIR}/include)
+
+# Autogenerate the `config.h` file
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/serene/config.h.in include/serene/config.h)
+
+
+target_compile_options(serene
+  PRIVATE
+  # LLVM has it's own RTTI
+  -fno-rtti
+  -fno-builtin-strlen
+
+  # Dedicate a section to each function, so the linker
+  # can do a better job on dead code elimination
+  -ffunction-sections
+  -fdata-sections
+
+  $<$<CONFIG:DEBUG>:-fsanitize=address>
+  $<$<CONFIG:DEBUG>:-static-libsan>
+  $<$<CONFIG:DEBUG>:-g3>
+  $<$<CONFIG:DEBUG>:-O1>
+  $<$<CONFIG:DEBUG>:-ggdb>
+  # For the sake of debugging
+  $<$<CONFIG:DEBUG>:-fno-inline>
+  # To make the local ccache happy
+  $<$<CONFIG:DEBUG>:-fdebug-prefix-map=${PROJECT_SOURCE_DIR}=.>
+
+  # No tail call elimination on Debug to let asan provide
+  # better stacktrackes
+  $<$<CONFIG:DEBUG>:-fno-optimize-sibling-calls>
+
+  $<$<CONFIG:DEBUG>:-fno-omit-frame-pointer>
+  $<$<CONFIG:RELEASE>:-fomit-frame-pointer>
+
+  $<$<CONFIG:RELEASE>:-O3>
+  $<$<CONFIG:RELEASE>:-fmerge-all-constants>
+)
+
+target_link_options(serene
+  PRIVATE
+  -fuse-ld=lld
+  -Wl,-gc-sections
+
+  $<$<CONFIG:RELEASE>:-s>
+
+  $<$<CONFIG:DEBUG>:-fsanitize=address>
+  $<$<CONFIG:DEBUG>:-static-libsan>
+
+  # Do not link against shared libraries
+  --static
+)
+
+if(SERENE_ENABLE_BUILDID)
+  target_link_options(serene -Wl,--build-id)
+endif()
+
+if(SERENE_ENABLE_TIDY)
+  set_target_properties(serene PROPERTIES CXX_CLANG_TIDY ${CLANG_TIDY_PATH})
+endif()
+
+
+
+# TODO: Setup the THINLTO on release
+if(SERENE_ENABLE_THINLTO)
+endif()
+
+# target_link_libraries(serene
+#   PRIVATE
+#   )
+
+include(GNUInstallDirs)
+
+install(TARGETS serene EXPORT SereneTargets
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+add_subdirectory(src)
+add_subdirectory(include)

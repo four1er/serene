@@ -15,11 +15,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 cmake_minimum_required(VERSION 3.19)
 
-
-# Project name and a few useful settings. Other commands can pick up the results
 project(Serene
   VERSION 1.0.0
-  DESCRIPTION "Serene language is a modern Lisp."
+  DESCRIPTION "A modern Lisp."
   LANGUAGES CXX C)
 
 # Clangd command file
@@ -29,7 +27,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 # Policies
 # =============================================================================
 cmake_policy(SET CMP0116 OLD)
-
 
 # =============================================================================
 # User Options
@@ -42,23 +39,6 @@ option(SERENE_ENABLE_DOCS "Enable document generation" OFF)
 option(SERENE_ENABLE_TIDY "Enable clang tidy check" OFF)
 option(SERENE_DISABLE_CCACHE "Disable automatic ccache integration" OFF)
 option(SERENE_ENABLE_DEVTOOLS "Enable the devtools build" OFF)
-option(SERENE_USE_LIBCXX
-  "Use libc++ instead of the default (The deafault might be libc++ as well)"
-  OFF)
-set(SERENE_TOOLCHAIN_PATH
-  ""
-  CACHE
-  STRING
-  "Path to the LLVM build. If empty will use the the default on the platform.")
-
-# libserene
-option(SERENE_SHARED_LIB "Build libserene as a shared library" ON)
-option(SERENE_SHOW_MLIR_DIALECTS "Print out a list of MLIR dialect libs" OFF)
-option(SERENE_SHOW_MLIR_TRANSFORMERS "Print out a list of MLIR dialect transformer libs" OFF)
-option(SERENE_SHOW_LLVM_LIBS "Print all the llvm libs available" OFF)
-
-option(SERENE_WITH_MLIR_CL_OPTION "Add support for controlling MLIR via command line options" OFF)
-option(SERENE_USE_COMPILER_RT "Use LLVM's compiler-rt" OFF)
 
 # LLVM
 # Info about the target llvm build
@@ -76,25 +56,24 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 
   set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-  # Setup the source locations
-  set(INCLUDE_DIR ${CMAKE_SOURCE_DIR}/libserene/include)
-
   if(SERENE_ENABLE_TIDY)
     find_program(CLANG_TIDY_PATH NAMES clang-tidy REQUIRED)
   endif()
 
+  # We use iwyu intensively. For the version details check out the
+  # submodule at `deps/include-what-you-use`
   find_program(iwyu NAMES include-what-you-use iwyu REQUIRED)
   set(iwyu_path ${iwyu})
+
   # Let's ensure -std=c++xx instead of -std=g++xx
   set(CMAKE_CXX_EXTENSIONS OFF)
 
-  set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/scripts/cmake")
+  set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
   set(MemoryCheckCommand "valgrind")
-
-  configure_file(${INCLUDE_DIR}/serene/config.h.in include/serene/config.h)
 
   # Let's nicely support folders in IDEs
   set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
 
   find_package(BDWgc 8.2.0 REQUIRED)
   find_program(LLD_PROGRAM REQUIRED NAMES lld)
@@ -118,78 +97,26 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     -Wunused
     -Woverloaded-virtual
     -Wdouble-promotion
-    -Wformat=2
+    -Wformat=2)
 
-    -fno-rtti
-    -fno-builtin-strlen
+  # if ((SERENE_USE_LIBCXX) AND (NOT (SERENE_TOOLCHAIN_PATH)))
+  #   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -v")
+  #   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lc++abi")
+  # endif()
 
-    # Dedicate a section to each function, so the linker
-    # can do a better job on dead code elimination
-    -ffunction-sections
-    -fdata-sections
+  # if ((SERENE_USE_LIBCXX) AND (SERENE_TOOLCHAIN_PATH))
+  # endif()
 
-    $<$<CONFIG:DEBUG>:-g3>
-    $<$<CONFIG:DEBUG>:-O1>
-    $<$<CONFIG:DEBUG>:-ggdb>
-    # For the sake of debugging
-    $<$<CONFIG:DEBUG>:-fno-inline>
-    # To make the local ccache happy
-    $<$<CONFIG:DEBUG>:-fdebug-prefix-map=${PROJECT_SOURCE_DIR}=.>
-
-    # No tail call elimination on Debug to let asan provide
-    # better stacktrackes
-    $<$<CONFIG:DEBUG>:-fno-optimize-sibling-calls>
-
-    $<$<CONFIG:DEBUG>:-fno-omit-frame-pointer>
-    $<$<CONFIG:RELEASE>:-fomit-frame-pointer>
-
-    $<$<CONFIG:RELEASE>:-O3>
-    $<$<CONFIG:RELEASE>:-fmerge-all-constants>
-    )
-
-  add_link_options(
-    # We enforce the lld linker
-    -fuse-ld=lld
-    -Wl,-gc-sections
-    $<$<CONFIG:RELEASE>:-s>
-    # Do not link against shared libraries
-    #--static
-    )
-
-  if ((SERENE_USE_LIBCXX) AND (NOT (SERENE_TOOLCHAIN_PATH)))
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -v")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lc++abi")
-  endif()
-
-  if ((SERENE_USE_LIBCXX) AND (SERENE_TOOLCHAIN_PATH))
-  endif()
-
-  if (SERENE_USE_COMPILER_RT)
-    add_link_options(-rtlib=compiler-rt -stdlib=libc++ )
-  endif()
-
-  # Do we need to build serene as a shared lib? default is "yes"
-  if(SERENE_SHARED_LIB)
-    set(BUILD_SHARED_LIBS "${SERENE_SHARED_LIB}")
-  endif()
+  # if (SERENE_USE_COMPILER_RT)
+  #   add_link_options(-rtlib=compiler-rt -stdlib=libc++ )
+  # endif()
 
 
-  if(SERENE_ENABLE_BUILDID)
-    add_link_options(-Wl,--build-id)
-  endif()
-
-  #TODO: Setup the THINLTO on release
-  if(SERENE_ENABLE_THINLTO)
-  endif()
-
-  include(GNUInstallDirs)
-  Include(FetchContent)
 
   # CCache support ==============================
   if(SERENE_DISABLE_CCACHE)
     message(STATUS "CCache support is disabled")
   else()
-
     find_program(CCACHE_PROGRAM ccache)
 
     if(CCACHE_PROGRAM)
@@ -214,6 +141,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     endif()
   endif()
 
+  Include(FetchContent)
 
   if(SERENE_BUILD_TESTING)
     message(STATUS "Fetching Catch2 v3...")
@@ -228,101 +156,78 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
   endif()
 
   # LLVM setup =========================================
-  find_package(LLVM REQUIRED all-targets CONFIG)
-  find_package(MLIR REQUIRED CONFIG)
-  find_package(LLD REQUIRED CONFIG)
+  # find_package(LLVM REQUIRED all-targets CONFIG)
+  # find_package(MLIR REQUIRED CONFIG)
+  # find_package(LLD REQUIRED CONFIG)
 
-  message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
-  message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
-  message(STATUS "Using MLIRConfig.cmake in: ${MLIR_DIR}")
-  message(STATUS "Using LLDConfig.cmake in: ${LLD_DIR}")
+  # message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
+  # message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
+  # message(STATUS "Using MLIRConfig.cmake in: ${MLIR_DIR}")
+  # message(STATUS "Using LLDConfig.cmake in: ${LLD_DIR}")
 
-  set(LLVM_RUNTIME_OUTPUT_INTDIR ${CMAKE_BINARY_DIR}/bin)
-  set(LLVM_LIBRARY_OUTPUT_INTDIR ${CMAKE_BINARY_DIR}/lib)
-  set(MLIR_BINARY_DIR ${CMAKE_BINARY_DIR})
+  # set(LLVM_RUNTIME_OUTPUT_INTDIR ${CMAKE_BINARY_DIR}/bin)
+  # set(LLVM_LIBRARY_OUTPUT_INTDIR ${CMAKE_BINARY_DIR}/lib)
+  # set(MLIR_BINARY_DIR ${CMAKE_BINARY_DIR})
 
-  list(APPEND CMAKE_MODULE_PATH "${MLIR_CMAKE_DIR}")
-  list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
-  list(APPEND CMAKE_MODULE_PATH "${LLD_CMAKE_DIR}")
+  # list(APPEND CMAKE_MODULE_PATH "${MLIR_CMAKE_DIR}")
+  # list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
+  # list(APPEND CMAKE_MODULE_PATH "${LLD_CMAKE_DIR}")
 
-  include(TableGen)
-  include(AddLLVM)
-  include(AddMLIR)
-  include(HandleLLVMOptions)
+  # include(TableGen)
+  # include(AddLLVM)
+  # include(AddMLIR)
+  # include(HandleLLVMOptions)
 
-  include_directories(SYSTEM ${LLVM_INCLUDE_DIRS})
+  # include_directories(SYSTEM ${LLVM_INCLUDE_DIRS})
 
-  separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
-  add_definitions(${LLVM_DEFINITIONS_LIST})
+  # separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
+  # add_definitions(${LLVM_DEFINITIONS_LIST})
 
-  link_directories(${LLVM_BUILD_LIBRARY_DIR})
-  add_definitions(${LLVM_DEFINITIONS})
+  # link_directories(${LLVM_BUILD_LIBRARY_DIR})
+  # add_definitions(${LLVM_DEFINITIONS})
 
 
-  set(CONDITIONAL_COMPONENTS "")
+  # set(CONDITIONAL_COMPONENTS "")
 
-  if(LLVM_USE_PERF)
-    list(APPEND CONDITIONAL_COMPONENTS PerfJITEvents)
-  endif()
+  # if(LLVM_USE_PERF)
+  #   list(APPEND CONDITIONAL_COMPONENTS PerfJITEvents)
+  # endif()
 
-  llvm_map_components_to_libnames(llvm_libs
-    core
-    support
-    jitlink
-    orcjit
-    ExecutionEngine
-    ${CONDITIONAL_COMPONENTS}
-    ${LLVM_TARGETS_TO_BUILD}
-    )
+  # llvm_map_components_to_libnames(llvm_libs
+  #   core
+  #   support
+  #   jitlink
+  #   orcjit
+  #   ExecutionEngine
+  #   ${CONDITIONAL_COMPONENTS}
+  #   ${LLVM_TARGETS_TO_BUILD}
+  #   )
 
-  # Serene Setup ===================================
+  # # Serene Setup ===================================
 
-  # We don't want the generated files from table gen
-  # to be treated as local since the contain warnings
-  include_directories(SYSTEM ${PROJECT_BINARY_DIR}/include)
-  #TODO: Can we move it to the libserene cmake somehow?
-  include_directories(SYSTEM ${PROJECT_BINARY_DIR}/libserene/include/)
 
-  include_directories(${PROJECT_BINARY_DIR}/include/)
+  # # Make sure that our source directory is on the current cmake module path so
+  # # that we can include cmake files from this directory.
+  # list(INSERT CMAKE_MODULE_PATH 0
+  #   "${CMAKE_CURRENT_SOURCE_DIR}/cmake/"
+  #   "${LLVM_COMMON_CMAKE_UTILS}/Modules"
+  #   )
 
-  # Make sure that our source directory is on the current cmake module path so
-  # that we can include cmake files from this directory.
-  list(INSERT CMAKE_MODULE_PATH 0
-    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/"
-    "${LLVM_COMMON_CMAKE_UTILS}/Modules"
-    )
-
-  # Hide all the symbols by default
-  if(NOT DEFINED CMAKE_CXX_VISIBILITY_PRESET AND
-      NOT DEFINED CMAKE_VISIBILITY_INLINES_HIDDEN)
-    set(CMAKE_CXX_VISIBILITY_PRESET hidden)
-    set(CMAKE_VISIBILITY_INLINES_HIDDEN YES)
-  endif()
-
-  include(tablegen-serene)
+  add_subdirectory(serene)
+  # include(tablegen-serene)
   # Create the tools we use to compile Serene
-  add_subdirectory(serene-tblgen)
-
+  #add_subdirectory(serene-tblgen)
   # The compiled library code is here
-  add_subdirectory(libserene)
+  # add_subdirectory(libserene)
   # The static library containing builtin special forms and functions
-  add_subdirectory(core)
+  # add_subdirectory(core)
   # Binary tools of the compiler
-  add_subdirectory(serenec)
+  # add_subdirectory(serenec)
   # add_subdirectory(serene-repl)
 
   # add_subdirectory(devtools)
 
-
   if (SERENE_ENABLE_DOCS)
     add_subdirectory(docs)
   endif()
-
-  install(DIRECTORY ${PROJECT_BINARY_DIR}/include/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-    FILES_MATCHING
-    PATTERN *.h
-    PATTERN *.td
-    PATTERN "CMake*" EXCLUDE)
-
 endif()
