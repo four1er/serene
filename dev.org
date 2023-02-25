@@ -114,6 +114,15 @@ on ADF
 - [[https://blog.yossarian.net/2021/07/19/LLVM-internals-part-1-bitcode-format][LLVM Internals]]
 *** TableGen
 - [[https://llvm.org/docs/TableGen/BackGuide.html#creating-a-new-backend][Create a backend]]
+** Toolchain
+- https://llvm.org/docs/BuildingADistribution.html
+
+** Cross compilation
+
+- https://blog.gibson.sh/2017/11/26/creating-portable-linux-binaries/#some-general-suggestions
+  A nice to read article on some of the common problems when linking statically
+  with none default libc or libc++
+
 ** Useful courses
 -  https://www.cs.cornell.edu/courses/cs6120/2020fa/lesson/
 * Considerations
