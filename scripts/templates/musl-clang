@@ -1,0 +1,42 @@
+#! /bin/sh
+# This is a slightly modified version of the musl-clang script from
+# musl libc that distributes under the MIT license
+# -----------------------------------------------------------------------------
+# Commentary
+# -----------------------------------------------------------------------------
+# The idea of this template comes from musl itself. This is a wrapper that
+# We use to make musl libc hassel free.
+
+cc="@CC@"
+libc="@PREFIX@"
+libc_inc="@INCDIR@"
+libc_lib="@LIBDIR@"
+me="`cd "$(dirname "$0")"; pwd`"
+
+# prevent clang from running the linker (and erroring) on no input.
+sflags=
+eflags=
+for x ; do
+    case "$x" in
+        -l*) input=1 ;;
+        *) input= ;;
+    esac
+    if test "$input" ; then
+        sflags="-l-user-start"
+        eflags="-l-user-end"
+        break
+    fi
+done
+#     --rtlib=compiler-rt \
+exec $cc \
+    -B"$me" \
+    -fuse-ld=musl-lld \
+    -nostdinc \
+    --sysroot "$libc" \
+    -isystem "$libc_inc" \
+    -L-user-start \
+    $sflags \
+    "$@" \
+    $eflags \
+    -L"$libc_lib" \
+    -L-user-end

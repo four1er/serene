@@ -60,18 +60,17 @@ source "$ME/scripts/devfs.sh"
 # the builder script will not build them as part of the build process. They
 # can be built using the `builder deps` subcommand.
 LLVM_VERSION="0af67d167d6c811abf12ad6c27ee34ec1365e5fb"
-export LLVM_VERSION
-
 IWUY_VERSION="435ad9d35ceee7759ea8f8fd658579e979ee5146"
-export IWUY_VERSION
-
 BDWGC_VERSION="release-8_2"
-export BDWGC_VERSION
-
 MUSL_VERSION="v1.2.3"
-export MUSL_VERSION
+# We need this version to use it with our ldd when creating the toolchain
+LLVM_MAJOR_VERSION="17"
 
-
+# The target architectures that we want to build Serene in and also we want
+# serene to support. We use this variable when we're building the llvm
+TARGET_ARCHS="X86;AArch64;AMDGPU;ARM;RISCV;WebAssembly"
+export TARGET_ARCHS LLVM_MAJOR_VERSION MUSL_VERSION BDWGC_VERSION IWUY_VERSION \
+       LLVM_VERSION
 # -----------------------------------------------------------------------------
 # CONFIG VARS
 # -----------------------------------------------------------------------------
@@ -87,10 +86,6 @@ if [[ "$CXX" = "" ]]; then
     CXX=$(which clang++ || echo "Clang++_not_found")
     export CXX
 fi
-
-# The target architectures that we want to build Serene in and also we want
-# serene to support. We use this variable when we're building the llvm
-TARGET_ARCHS="X86;AArch64;AMDGPU;ARM;RISCV;WebAssembly"
 
 # The repository to push/pull packages to/from.
 DEV_HEROES="https://beta.devheroes.codes"
@@ -171,8 +166,8 @@ function popd_build() {
 function build-gen() {
     pushed_build
     info "Running: "
-    info "cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=$ME/cmake/toolchains/linux.cmake" "$ME" "${CMAKEARGS[*]} ${CMAKEARGS_DEBUG[*]}" "$@"
-    cmake -G Ninja "-DCMAKE_TOOLCHAIN_FILE=$ME/cmake/toolchains/linux.cmake" "$ME" "${CMAKEARGS[@]}" "${CMAKEARGS_DEBUG[@]}" "$@"
+    info "cmake -G Ninja" "$ME" "${CMAKEARGS[*]} ${CMAKEARGS_DEBUG[*]}" "$@"
+    cmake -G Ninja "$ME" "${CMAKEARGS[@]}" "${CMAKEARGS_DEBUG[@]}" "$@"
     popd_build
 }
 

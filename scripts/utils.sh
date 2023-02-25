@@ -111,3 +111,26 @@ function http_pull() {
         return 4
     fi
 }
+
+function clone_dep() {
+    local dest
+    local repo
+    local version
+    repo="$1"
+    version="$2"
+    dest="$3"
+
+    if [[ -d "$dest" ]]; then
+        return
+    fi
+
+    #mkdir -p "$dest"
+
+    #git init -b master
+    git clone --depth=1 "$repo" "$dest"
+    _push "$dest"
+    #git remote add origin "$repo"
+    git fetch --depth=1 --filter=tree:0 origin "$version"
+    git reset --hard FETCH_HEAD
+    _pop
+}
