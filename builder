@@ -59,7 +59,7 @@ source "$ME/scripts/devfs.sh"
 # during the build process of Serene, these dependencies must be present but
 # the builder script will not build them as part of the build process. They
 # can be built using the `builder deps` subcommand.
-LLVM_VERSION="0af67d167d6c811abf12ad6c27ee34ec1365e5fb"
+LLVM_VERSION="fa66e4bd9315d20990c86ef57c7901b6dc71bd02"
 IWUY_VERSION="435ad9d35ceee7759ea8f8fd658579e979ee5146"
 BDWGC_VERSION="release-8_2"
 MUSL_VERSION="v1.2.3"

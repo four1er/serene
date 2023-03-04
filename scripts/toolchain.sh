@@ -30,8 +30,50 @@ STAGE1_DIR="$DEPS_BUILD_DIR/stage1.$LLVM_VERSION.$MUSL_VERSION"
 STAGE2_DIR="$DEPS_BUILD_DIR/stage2.$LLVM_VERSION.$MUSL_VERSION"
 STAGE2_TC_DIR="$DEPS_BUILD_DIR/stage2_tc.$LLVM_VERSION.$MUSL_VERSION"
 
-
 function build_toolchain_stage0() {
+    local version repo src stage1 old_path install_dir build_dir
+
+    version="$LLVM_VERSION"
+    repo="${LLVM_REPO:-https://github.com/llvm/llvm-project.git}"
+    src="$DEPS_SOURCE_DIR/$LLVM_DIR_NAME.$version"
+    install_dir="$STAGE0_DIR"
+    build_dir="$DEPS_BUILD_DIR/${LLVM_DIR_NAME}_build.stage0.$version"
+
+    clone_dep "$repo" "$version" "$src"
+
+    info "Building the stage0 toolchain version '$version'..."
+    if [[ -d "$build_dir" ]]; then
+        warn "A build dir for 'toolchain' already exists at '$build_dir'"
+    fi
+
+    mkdir -p "$build_dir"
+    mkdir -p "$install_dir"
+
+    _push "$build_dir"
+
+    export CFLAGS=' -g -g1 '
+    export CXXFLAGS="$CFLAGS"
+    cmake -G Ninja \
+          -DCMAKE_INSTALL_PREFIX="$install_dir" \
+          -DLLVM_PARALLEL_COMPILE_JOBS="$(nproc)" \
+          -DLLVM_PARALLEL_LINK_JOBS="$(nproc)" \
+          -C "$ME/cmake/toolchains/stage1.cmake" \
+          -S "$src/llvm"
+    cmake --build . --parallel
+    # ninja stage2-distribution
+    # ninja stage2-install
+    # ninja stage2-install-distribution
+    cmake -DCMAKE_INSTALL_PREFIX="$install_dir" -P cmake_install.cmake
+
+    unset CC
+    unset CXX
+
+    _pop
+    info "Stage0 toolchain build is ready at '$install_dir'"
+}
+
+
+function build_toolchain_stage01() {
     local version repo src stage1 old_path install_dir build_dir
 
     version="$LLVM_VERSION"
@@ -54,7 +96,7 @@ function build_toolchain_stage0() {
     export CFLAGS=' -g -g1 '
     export CXXFLAGS="$CFLAGS"
 
-    local CONFIG_OPTIONS LINKERFLAGS
+    local CONFIG_OPTIONS
     # Set the build options ..
     CONFIG_OPTIONS+="-DBUILD_SHARED_LIBS=OFF "
     CONFIG_OPTIONS+="-DLLVM_ENABLE_LIBCXX=ON "
@@ -99,6 +141,7 @@ function build_toolchain_stage0() {
 
     # Set the options for libc++
     CONFIG_LIBCXX+="-DLIBCXX_USE_COMPILER_RT=ON "
+    CONFIG_LIBCXX+="-DLIBCXX_CXX_ABI=libcxxabi "
     CONFIG_LIBCXX+="-DLIBCXX_EXTRA_SITE_DEFINES=ON "
     CONFIG_LIBCXX+="-DLIBCXX_ENABLE_ASSERTIONS=ON "
     CONFIG_LIBCXX+="-DLIBCXX_ENABLE_LOCALIZATION=OFF "
@@ -218,24 +261,28 @@ function build_musl_stage1() {
     # Create a symlink that can be used to print
     # the required shared objects of a program or
     # shared object
-    ln -sv "$install_dir/lib/libc.so" "$install_dir/bin/ldd"
+    # ln -sv "$install_dir/lib/libc.so" "$install_dir/bin/ldd"
 
-    # Configure the dynamic linker
-    mkdir -p "$install_dir/etc"
-    {
-        echo "$STAGE0_DIR/lib/clang/$LLVM_MAJOR_VERSION/lib/x86_64-unknown-linux-gnu"
-        echo "$STAGE0_DIR/lib/x86_64-unknown-linux-gnu"
-        echo "$install_dir/lib"
-        echo "$install_dir/x86_64-unknown-linux-gnu/lib"
-        echo "$install_dir/usr/lib64"
-        echo "$install_dir/lib64"
-        echo "$install_dir/usr/lib"
-        echo "$STAGE0_DIR/lib"
-        echo "$STAGE0_DIR/x86_64-pc-linux-gnu/lib"
-        echo "$STAGE0_DIR/usr/lib64"
-        echo "$STAGE0_DIR/lib64"
-        echo "$STAGE0_DIR/usr/lib"
-    } >> "$install_dir/etc/ld-musl-$(uname -m).path"
+    # # Configure the dynamic linker
+    # mkdir -p "$install_dir/etc"
+    # {
+    #     echo "/usr/lib/gcc/x86_64-pc-linux-gnu/12"
+    #     echo "/usr/lib/gcc/x86_64-pc-linux-gnu/11"
+    #     echo "/usr/lib64/"
+    #     echo "/usr/lib/"
+    #     echo "$STAGE0_DIR/lib/clang/$LLVM_MAJOR_VERSION/lib/x86_64-unknown-linux-gnu"
+    #     echo "$STAGE0_DIR/lib/x86_64-unknown-linux-gnu"
+    #     echo "$install_dir/lib"
+    #     echo "$install_dir/x86_64-unknown-linux-gnu/lib"
+    #     echo "$install_dir/usr/lib64"
+    #     echo "$install_dir/lib64"
+    #     echo "$install_dir/usr/lib"
+    #     echo "$STAGE0_DIR/lib"
+    #     echo "$STAGE0_DIR/x86_64-pc-linux-gnu/lib"
+    #     echo "$STAGE0_DIR/usr/lib64"
+    #     echo "$STAGE0_DIR/lib64"
+    #     echo "$STAGE0_DIR/usr/lib"
+    # } >> "$install_dir/etc/ld-musl-$(uname -m).path"
 
     # cp -v "$ME/scripts/templates/musl-clang" "$stage1/bin/"
     # chmod +x "$stage1/bin/musl-clang"
@@ -254,7 +301,7 @@ function build_musl_stage1() {
     # /TODO
     echo -e "#include <string.h>\nint main() {return 0;}" > "$install_dir/main.cpp"
 
-    $CXX -stdlib=libc++ "$install_dir/main.cpp" -o "$install_dir/main" -fuse-ld=lld -v
+    $CXX -stdlib=libc++ -static "$install_dir/main.cpp" -o "$install_dir/main" -fuse-ld=lld -v
 
     unset CC CXX LDFLAGS
 
@@ -291,139 +338,62 @@ function build_toolchain_stage1() {
     _push "$LLVM_BUILD_DIR.stage1.$version"
     old_path="$PATH"
     PATH="$STAGE0_DIR/bin:$PATH"
+
     CC=$(which clang)
     CXX=$(which clang++)
-    LDFLAGS="-fuse-ld=lld"
 
-    export CC CXX LDFLAGS PATH LDFLAGS
+    export CC CXX PATH
+
+    info "Testing libc++ availability..."
+    (printf "#include <cstddef>\nint main(){return sizeof(size_t);}" \
+        | $CXX -x c++ -stdlib=libc++ -v - || {
+        >&2 echo "Need libc++ for this to work"
+        exit 1
+     }) && {
+        info "libc++ looks ok!"
+    }
 
     export CFLAGS=' -g -g1 '
-    export CXXFLAGS="$CFLAGS -stdlib=libc++ -isystem $STAGE0_DIR/include"
-    export LDFLAGS="-fuse-ld=lld --rtlib=compiler-rt"
-    local CONFIG_OPTIONS LINKERFLAGS CONFIG_TOOLS
-    # Set the build options ..
-    CONFIG_OPTIONS+="-DBUILD_SHARED_LIBS=ON "
-    CONFIG_OPTIONS+="-DLLVM_ENABLE_LIBCXX=ON "
-    CONFIG_OPTIONS+="-DLLVM_TARGET_ARCH=X86 "
-    CONFIG_OPTIONS+="-DLLVM_TARGETS_TO_BUILD=X86 "
-    CONFIG_OPTIONS+="-DLIBCXX_HAS_MUSL_LIBC=ON "
-    CONFIG_OPTIONS+="-DLLVM_ENABLE_EH=ON "
-    CONFIG_OPTIONS+="-DLLVM_ENABLE_RTTI=ON "
-    CONFIG_OPTIONS+="-DLLVM_BUILD_LLVM_DYLIB=ON "
-    CONFIG_OPTIONS+="-DCMAKE_C_COMPILER=$CC "
-    CONFIG_OPTIONS+="-DCMAKE_CXX_COMPILER=$CXX "
+    export CXXFLAGS="$CFLAGS -isystem $STAGE0_DIR/include "
+    export LDFLAGS="-fuse-ld=lld -L $STAGE0_DIR/lib/ -lc++abi -L $STAGE0_DIR/lib/x86_64-unknown-linux-gnu"
 
     # Set the compiler and linker flags...
-    LINKERFLAGS="-Wl,-dynamic-linker $install_dir/lib/ld-musl-x86_64.so.1"
-    #CONFIG_TOOLS="-DCLANG_DEFAULT_LINKER=$install_dir/bin/ld.lld "
-    CONFIG_TOOLS=""
-
-    local CONFIG_TUPLES
-    # Set the tuples...
-    CONFIG_TUPLES="-DLLVM_DEFAULT_TARGET_TRIPLE=x86_64-unknown-linux-musl "
-    CONFIG_TUPLES+="-DLLVM_HOST_TRIPLE=x86_64-unknown-linux-musl "
-    CONFIG_TUPLES+="-DCOMPILER_RT_DEFAULT_TARGET_TRIPLE=x86_64-unknown-linux-musl "
-
-    local CONFIG_CRT
-    # Set the flags for Compiler-rt...
-    CONFIG_CRT="-DCOMPILER_RT_BUILD_SANITIZERS=OFF"
-    CONFIG_CRT+="-DCOMPILER_RT_BUILD_XRAY=OFF "
-    CONFIG_CRT+="-DCOMPILER_RT_BUILD_PROFILE=OFF "
-    CONFIG_CRT+="-DCOMPILER_RT_BUILD_LIBFUZZER=OFF "
-    CONFIG_CRT+="-DCOMPILER_RT_BUILD_ORC=OFF "
-    CONFIG_CRT+="-DCOMPILER_RT_CAN_EXECUTE_TESTS=OFF "
-    CONFIG_CRT+="-DCOMPILER_RT_HWASAN_WITH_INTERCEPTORS=OFF "
-    CONFIG_CRT+="-DCOMPILER_RT_USE_BUILTINS_LIBRARY=OFF "
-    CONFIG_CRT+="-DCOMPILER_RT_USE_LLVM_UNWINDER=ON "
-
-    local CONFIG_CLANG
-    # Set the flags for clang:
-    CONFIG_CLANG="-DCLANG_DEFAULT_CXX_STDLIB=libc++ "
-    CONFIG_CLANG+="-DCLANG_DEFAULT_UNWINDLIB=libunwind "
-    CONFIG_CLANG+="-DCLANG_DEFAULT_RTLIB=compiler-rt "
-    CONFIG_CLANG+="-DCLANG_ENABLE_STATIC_ANALYZER=OFF "
-    CONFIG_CLANG+="-DCLANG_ENABLE_ARCMT=OFF "
-    CONFIG_CLANG+="-DCLANG_TOOL_CLANG_IMPORT_TEST_BUILD=OFF "
-    CONFIG_CLANG+="-DCLANG_TOOL_C_ARCMT_TEST_BUILD=OFF "
-    CONFIG_CLANG+="-DCLANG_TOOL_C_INDEX_TEST_BUILD=OFF "
-    CONFIG_CLANG+="-DCLANG_TOOL_AMDGPU_ARCH_BUILD=OFF "
-    CONFIG_CLANG+="-DCLANG_TOOL_APINOTES_TEST_BUILD=OFF "
-    CONFIG_CLANG+="-DCLANG_TOOL_ARCMT_TEST_BUILD=OFF "
-
-    local CONFIG_LIBUNWIND CONFIG_LIBCXXABI CONFIG_LIBCXX
-    # Set the flags to prevent build static libraries for
-    # libunwind, libcxxabi, and libcxx:
-    CONFIG_LIBUNWIND="-DLIBUNWIND_ENABLE_STATIC=OFF "
-    CONFIG_LIBCXXABI="-DLIBCXXABI_ENABLE_STATIC=OFF "
-    CONFIG_LIBCXX="-DLIBCXX_ENABLE_STATIC=OFF "
-
-    # Set the options for libc++
-    CONFIG_LIBCXX+="-DLIBCXX_USE_COMPILER_RT=ON "
-    CONFIG_LIBCXX+="-DLIBCXX_EXTRA_SITE_DEFINES=ON "
-    CONFIG_LIBCXX+="-DLIBCXX_ENABLE_ASSERTIONS=ON "
-    CONFIG_LIBCXX+="-DLIBCXX_ENABLE_LOCALIZATION=OFF "
-    CONFIG_LIBCXX+="-DLIBCXX_ENABLE_VENDOR_AVAILABILITY_ANNOTATIONS=ON "
-    CONFIG_LIBCXX+="-DLIBCXX_ENABLE_ABI_LINKER_SCRIPT=OFF "
-
-    # Set the options for libc++abi
-    CONFIG_LIBCXXABI+="-DLIBCXXABI_ENABLE_FORGIVING_DYNAMIC_CAST=ON "
-    CONFIG_LIBCXXABI+="-DLIBCXXABI_USE_COMPILER_RT=ON "
-    CONFIG_LIBCXXABI+="-DLIBCXXABI_USE_LLVM_UNWINDER=ON "
-    # Set the options for libunwind
-    CONFIG_LIBUNWIND+="-DLIBUNWIND_ENABLE_CROSS_UNWINDING=ON "
-
-    # Set paths...
-    local CONFIG_PATHS
-    CONFIG_PATHS="-DCMAKE_INSTALL_PREFIX=$install_dir "
-    CONFIG_PATHS+="-DCMAKE_INSTALL_OLDINCLUDEDIR=$STAGE1_DIR/include "
-    CONFIG_PATHS+="-DDEFAULT_SYSROOT=$install_dir "
-
-    # Turn off unwanted features, docs and tests
-    local BUILD_OFF
-    BUILD_OFF="-DLLVM_BUILD_TESTS=OFF "
-    BUILD_OFF+="-DLLVM_INCLUDE_TESTS=OFF "
-    BUILD_OFF+="-DLLVM_INCLUDE_DOCS=OFF "
-    BUILD_OFF+="-DLLVM_INCLUDE_EXAMPLES=OFF "
-    BUILD_OFF+="-DLLVM_INCLUDE_BENCHMARKS=OFF "
-    BUILD_OFF+="-DLLVM_ENABLE_OCAMLDOC=OFF "
-    BUILD_OFF+="-DLLVM_ENABLE_BACKTRACES=OFF "
-    BUILD_OFF+="-DLLVM_ENABLE_LIBEDIT=OFF "
-    BUILD_OFF+="-DLLVM_ENABLE_LIBXML2=OFF "
-    BUILD_OFF+="-DLLVM_ENABLE_LIBPFM=OFF "
-    BUILD_OFF+="-DLLVM_ENABLE_TERMINFO=OFF "
-    BUILD_OFF+="-DLLVM_ENABLE_ZLIB=OFF "
-    BUILD_OFF+="-DLLVM_ENABLE_Z3_SOLVER=OFF "
-    BUILD_OFF+="-DLLVM_ENABLE_CRASH_OVERRIDES=OFF "
-    BUILD_OFF+="-DLLVM_ENABLE_ZSTD=OFF "
-    BUILD_OFF+="-DLLVM_APPEND_VC_REV=OFF "
-    BUILD_OFF+="-DLIBCXX_INCLUDE_BENCHMARKS=OFF "
-    BUILD_OFF+="-DLLVM_TOOL_XCODE_TOOLCHAIN_BUILD=OFF "
-    BUILD_OFF+="-DLLVM_TOOL_LLVM_XRAY_BUILD=OFF "
-    BUILD_OFF+="-DLLVM_TOOL_LLVM_MICROSOFT_DEMANGLE_FUZZER_BUILD=OFF "
-    BUILD_OFF+="-DLLVM_TOOL_LLVM_ITANIUM_DEMANGLE_FUZZER_BUILD=OFF "
-    BUILD_OFF+="-DLLVM_TOOL_BUGPOINT_PASSES_BUILD=OFF "
-    BUILD_OFF+="-DLLVM_TOOL_BUGPOINT_BUILD=OFF "
+    #LINKERFLAGS="-Wl,-dynamic-linker $install_dir/lib/ld-musl-x86_64.so.1"
 
     cmake -G Ninja -Wno-dev \
           -DCMAKE_INSTALL_PREFIX="$install_dir" \
           -DLLVM_PARALLEL_COMPILE_JOBS="$(nproc)" \
           -DLLVM_PARALLEL_LINK_JOBS="$(nproc)" \
-          -DCMAKE_EXE_LINKER_FLAGS="${LINKERFLAGS}"    \
-          -DCMAKE_SHARED_LINKER_FLAGS="${LINKERFLAGS}" \
-          -DCMAKE_BUILD_TYPE=Release \
-          "${CONFIG_TOOLS}" "${CONFIG_TUPLES}" \
-          "${CONFIG_CRT}" "${CONFIG_CLANG}" "${CONFIG_OPTIONS}" \
-          "${CONFIG_LIBUNWIND}" "${CONFIG_LIBCXXABI}" \
-          "${CONFIG_LIBCXX}" "${CONFIG_PATHS}" "${BUILD_OFF}"  \
-          -DLLVM_ENABLE_PROJECTS="clang;lld" \
-          -DLLVM_ENABLE_RUNTIMES='compiler-rt;libcxx;libcxxabi;libunwind' \
-          -DLLVM_ENABLE_LLD=ON \
-          -DCOMPILER_RT_EXCLUDE_ATOMIC_BUILTIN=OFF \
-          -DCOMPILER_RT_BUILD_BUILTINS=ON \
-          -DLIBCXX_USE_COMPILER_RT=ON \
-          -DLIBCXXABI_USE_COMPILER_RT=ON \
-          -DCOMPILER_RT_USE_BUILTINS_LIBRARY=ON \
+          -C "$ME/cmake/toolchains/stage2.standalone.cmake" \
           "$src/llvm"
+
+          # -DCMAKE_EXE_LINKER_FLAGS="${LINKERFLAGS}" \
+          # -DCMAKE_SHARED_LINKER_FLAGS="${LINKERFLAGS}" \
+
+#              -DCMAKE_SYSROOT="$STAGE0_DIR" \
+    #-DCMAKE_C_LINK_EXECUTABLE="$STAGE0_DIR/bin/bla" \
+    #      -DCMAKE_CXX_LINK_EXECUTABLE="$STAGE0_DIR/bin/bla" \
+
+          # -DLLVM_DEFAULT_TARGET_TRIPLE=x86_64-unknown-linux-musl \
+          # -DLLVM_HOST_TRIPLE=x86_64-unknown-linux-musl \
+          # -DCOMPILER_RT_DEFAULT_TARGET_TRIPLE=x86_64-unknown-linux-musl \
+
+          # -DCMAKE_EXE_LINKER_FLAGS="${LINKERFLAGS}"    \
+          # -DCMAKE_SHARED_LINKER_FLAGS="${LINKERFLAGS}" \
+
+          # "${CONFIG_TOOLS}" "${CONFIG_TUPLES}" \
+          # "${CONFIG_CRT}" "${CONFIG_CLANG}" "${CONFIG_OPTIONS}" \
+          # "${CONFIG_LIBUNWIND}" "${CONFIG_LIBCXXABI}" \
+          # "${CONFIG_LIBCXX}" "${CONFIG_PATHS}" "${BUILD_OFF}"  \
+          # -DLLVM_ENABLE_PROJECTS="clang;lld" \
+          # -DLLVM_ENABLE_RUNTIMES='compiler-rt;libcxx;libcxxabi;libunwind' \
+          # -DLLVM_ENABLE_LLD=ON \
+          # -DCOMPILER_RT_EXCLUDE_ATOMIC_BUILTIN=OFF \
+          # -DCOMPILER_RT_BUILD_BUILTINS=ON \
+          # -DLIBCXX_USE_COMPILER_RT=ON \
+          # -DLIBCXXABI_USE_COMPILER_RT=ON \
+          # -DCOMPILER_RT_USE_BUILTINS_LIBRARY=ON \
+
           # -DLLVM_BUILD_EXAMPLES=OFF \
           # -DLLVM_TARGETS_TO_BUILD="X86" \
           # -DCMAKE_BUILD_TYPE=Release \
@@ -736,7 +706,8 @@ function build_toolchain() {
             build_toolchain_stage0
             ;;
         "stage1")
-            build_musl_stage1
+            #cp -r "$STAGE0_DIR" "$STAGE1_DIR"
+            #build_musl_stage1
             build_toolchain_stage1
             ;;
         "stage2")
