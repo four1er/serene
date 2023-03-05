@@ -30,6 +30,19 @@ STAGE1_DIR="$DEPS_BUILD_DIR/stage1.$LLVM_VERSION.$MUSL_VERSION"
 STAGE2_DIR="$DEPS_BUILD_DIR/stage2.$LLVM_VERSION.$MUSL_VERSION"
 STAGE2_TC_DIR="$DEPS_BUILD_DIR/stage2_tc.$LLVM_VERSION.$MUSL_VERSION"
 
+DOCKER_IMAGE="serene/toolchain-base"
+DOCKER_TAG="latest"
+
+
+function run_in_container() {
+    docker run --rm -t \
+           -v "$ME:/home/serene/serene" \
+           -v "$SERENE_HOME_DIR:/home/serene/.serene/" \
+           --user "$(id -u):$(id -g)" \
+           "$DOCKER_IMAGE:$DOCKER_TAG" \
+           "$@"
+}
+
 function build_toolchain_stage0() {
     local version repo src stage1 old_path install_dir build_dir
 
@@ -51,8 +64,9 @@ function build_toolchain_stage0() {
 
     _push "$build_dir"
 
-    export CFLAGS=' -g -g1 '
+    export CFLAGS=' -g -g1 ' # -nodefaultlibs -nostdlibs  -nostdinc++ -nostdlib++
     export CXXFLAGS="$CFLAGS"
+    #export LDFLAGS="-lc -lc++"
     cmake -G Ninja \
           -DCMAKE_INSTALL_PREFIX="$install_dir" \
           -DLLVM_PARALLEL_COMPILE_JOBS="$(nproc)" \
@@ -77,7 +91,8 @@ function build_musl_stage1() {
     local version repo src build_dir install_dir old_path stage1
 
     version="$MUSL_VERSION"
-    install_dir="$STAGE1_DIR"
+    install_dir="$DEPS_BUILD_DIR/musl.stage1.$version"
+    #install_dir="$STAGE1_DIR.tmp"
     build_dir="$DEPS_BUILD_DIR/${MUSL_DIR_NAME}_build.stage1.$version"
     repo="${MUSL_REPO:-git://git.musl-libc.org/musl}"
     src="$DEPS_SOURCE_DIR/$MUSL_DIR_NAME.$version"
@@ -168,8 +183,10 @@ function build_musl_stage1() {
 
 
 function build_toolchain_stage1() {
-    local version repo src install_dir build_dir old_path
+    local version repo src install_dir build_dir old_path musl
 
+    #musl="$DEPS_BUILD_DIR/musl.stage1.$MUSL_VERSION"
+    musl="$STAGE1_DIR.tmp"
     version="$LLVM_VERSION"
     install_dir="$STAGE1_DIR"
     build_dir="$LLVM_BUILD_DIR.stage1.$version"
@@ -205,10 +222,10 @@ function build_toolchain_stage1() {
      }) && {
         info "libc++ looks ok!"
     }
-
-    export CFLAGS=' -g -g1 '
-    export CXXFLAGS="$CFLAGS -isystem $STAGE0_DIR/include "
-    export LDFLAGS="-fuse-ld=lld -L $STAGE0_DIR/lib/ -lc++abi -L $STAGE0_DIR/lib/x86_64-pc-linux-gnu"
+    # -isystem $STAGE0_DIR/include/c++/v1/ -isystem $STAGE0_DIR/include -isystem $musl/include
+    export CFLAGS=' -g -g1 -nodefaultlibs'
+    export CXXFLAGS="$CFLAGS -nostdinc++ -nostdlib++ -isystem $STAGE0_DIR/include/x86_64-pc-linux-gnu/c++/v1/ -isystem $STAGE0_DIR/include/c++/v1/  -isystem $musl/include -isystem $STAGE0_DIR/include"
+    export LDFLAGS="-fuse-ld=lld -L $musl/lib/ -L $STAGE0_DIR/lib/  -lc++ -lc++abi -L $STAGE0_DIR/lib/x86_64-pc-linux-gnu -L $STAGE0_DIR/lib/clang/17/lib/x86_64-pc-linux-gnu  -lc --rtlib=compiler-rt -lunwind -rpath $STAGE0_DIR/lib"
 
     # Set the compiler and linker flags...
     #LINKERFLAGS="-Wl,-dynamic-linker $install_dir/lib/ld-musl-x86_64.so.1"
@@ -219,6 +236,8 @@ function build_toolchain_stage1() {
           -DLLVM_PARALLEL_LINK_JOBS="$(nproc)" \
           -C "$ME/cmake/toolchains/stage2.standalone.cmake" \
           "$src/llvm"
+          # -DCMAKE_SYSROOT="$STAGE0_DIR" \
+          # -DDEFAULT_SYSROOT="$STAGE0_DIR" \
 
           # -DCMAKE_EXE_LINKER_FLAGS="${LINKERFLAGS}" \
           # -DCMAKE_SHARED_LINKER_FLAGS="${LINKERFLAGS}" \
@@ -555,12 +574,19 @@ function build_toolchain() {
             build_libcxx_stage2
             build_toolchain_stage2
             ;;
+        "dstage0")
+            run_in_container ./builder deps build toolchain stage0
+            ;;
         "stage0")
             build_toolchain_stage0
             ;;
         "stage1")
-            #cp -r "$STAGE0_DIR" "$STAGE1_DIR"
+            #cp -r "$STAGE0_DIR" "$STAGE1_DIR.tmp"
             build_musl_stage1
+            build_toolchain_stage1
+            ;;
+        "stage1-tc")
+            #cp -r "$STAGE0_DIR" "$STAGE1_DIR"
             build_toolchain_stage1
             ;;
         "stage2")
