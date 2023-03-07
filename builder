@@ -59,8 +59,8 @@ source "$ME/scripts/devfs.sh"
 # during the build process of Serene, these dependencies must be present but
 # the builder script will not build them as part of the build process. They
 # can be built using the `builder deps` subcommand.
-LLVM_VERSION="fa66e4bd9315d20990c86ef57c7901b6dc71bd02"
-IWUY_VERSION="435ad9d35ceee7759ea8f8fd658579e979ee5146"
+LLVM_VERSION="9fda8322243168cbfcb78c4cf80afa838473a573"
+IWYU_VERSION="435ad9d35ceee7759ea8f8fd658579e979ee5146"
 BDWGC_VERSION="release-8_2"
 MUSL_VERSION="v1.2.3"
 # We need this version to use it with our ldd when creating the toolchain
@@ -69,7 +69,7 @@ LLVM_MAJOR_VERSION="17"
 # The target architectures that we want to build Serene in and also we want
 # serene to support. We use this variable when we're building the llvm
 TARGET_ARCHS="X86;AArch64;AMDGPU;ARM;RISCV;WebAssembly"
-export TARGET_ARCHS LLVM_MAJOR_VERSION MUSL_VERSION BDWGC_VERSION IWUY_VERSION \
+export TARGET_ARCHS LLVM_MAJOR_VERSION MUSL_VERSION BDWGC_VERSION IWYU_VERSION \
        LLVM_VERSION
 # -----------------------------------------------------------------------------
 # CONFIG VARS
@@ -88,7 +88,7 @@ if [[ "$CXX" = "" ]]; then
 fi
 
 # The repository to push/pull packages to/from.
-DEV_HEROES="https://beta.devheroes.codes"
+DEV_HEROES="https://devheroes.codes"
 
 BUILD_DIR_NAME="build"
 export BUILD_DIR_NAME
