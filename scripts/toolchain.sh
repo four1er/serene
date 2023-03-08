@@ -83,8 +83,11 @@ function build_llvm() {
 
     unset CC
     unset CXX
-
     _pop
+
+    # Enable the lld linker as the default linker for this toolchain
+    ln -s "$install_dir/bin/ld.lld" "$install_dir/bin/ld"
+
     info "llvm build is ready at '$install_dir'"
     info "Just add the 'bin' dir to you PATH"
 }
