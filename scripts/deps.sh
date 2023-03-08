@@ -164,42 +164,35 @@ function info_bdwgc() {
 }
 
 function build_musl() {
-    local version
-    local repo
-    local src
+    local version repo src install_dir build_dir
 
     version="$MUSL_VERSION"
+    install_dir="$DEPS_BUILD_DIR/musl.$version"
+    build_dir="$DEPS_BUILD_DIR/musl_build.$version"
     repo="${MUSL_REPO:-git://git.musl-libc.org/musl}"
-    src="$DEPS_SOURCE_DIR/$MUSL_DIR_NAME.$version"
+    src="$DEPS_SOURCE_DIR/musl.$version"
 
     clone_dep "$repo" "$version" "$src"
 
     info "Building musl version '$version'..."
-    if [[ -d "$MUSL_BUILD_DIR.$version" ]]; then
-        warn "A build dir for 'musl' already exists at '$MUSL_BUILD_DIR.$version'"
+    if [[ -d "$build_dir" ]]; then
+        warn "A build dir for 'musl' already exists at '$build_dir'"
         warn "Cleaning up..."
-        rm -rf "$MUSL_BUILD_DIR.$version"
+        rm -rf "$build_dir"
     fi
 
-    info "Copy the source to the build directory at: '$MUSL_BUILD_DIR.$version'"
-    cp -r "$src" "$MUSL_BUILD_DIR.$version"
+    info "Copy the source to the build directory at: '$build_dir'"
+    cp -r "$src" "$build_dir"
 
-    mkdir -p "$MUSL_INSTALL_DIR"
+    mkdir -p "$install_dir"
 
-    _push "$MUSL_BUILD_DIR.$version"
-    ./configure --disable-shared --prefix="$MUSL_INSTALL_DIR"
+    _push "$build_dir"
+    ./configure --disable-shared --prefix="$install_dir"
 
     make -j "$(nproc)"
     make install
     _pop
-    info_musl
-}
-
-function info_musl() {
-    local version
-    version="$MUSL_VERSION"
-
-    info "'musl' version '$MUSL_VERSION' installed at '$MUSL_INSTALL_DIR'"
+    info "'musl' version '$version' installed at '$install_dir'"
 }
 
 function package_musl() { ## Packages the built toolchain
