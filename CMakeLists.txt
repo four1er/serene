@@ -99,6 +99,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     -Wdouble-promotion
     -Wformat=2)
 
+  add_link_options(-fuse-ld=lld)
   # if ((SERENE_USE_LIBCXX) AND (NOT (SERENE_TOOLCHAIN_PATH)))
   #   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -v")
   #   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lc++abi")

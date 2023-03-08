@@ -49,8 +49,7 @@ set_target_properties(serene PROPERTIES
   SOVERSION ${PROJECT_VERSION_MAJOR}
   # Warn on unused libs
   LINK_WHAT_YOU_USE TRUE
-  # LTO support
-  INTERPROCEDURAL_OPTIMIZATION TRUE)
+)
 
 if (CPP_20_SUPPORT)
   target_compile_features(serene PRIVATE cxx_std_20)
@@ -64,9 +63,21 @@ target_include_directories(serene
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+
 # We don't want the generated files from table gen
 # to be treated as local since the contain warnings
-target_include_directories(serene SYSTEM PRIVATE ${PROJECT_BINARY_DIR}/include)
+target_include_directories(serene SYSTEM PRIVATE
+  ${PROJECT_BINARY_DIR}/include
+  # ${SERENE_LLVM_DIR}/include/x86_64-unknown-linux-gnu/c++/v1
+  # ${SERENE_LLVM_DIR}/include/c++/v1
+  #${MUSL_DIR}/include
+)
+
+target_link_directories(serene
+  PRIVATE
+  # ${SERENE_LLVM_DIR}/lib
+  # ${MUSL_DIR}/lib
+)
 
 # Autogenerate the `config.h` file
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/serene/config.h.in include/serene/config.h)
@@ -74,9 +85,17 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/serene/config.h.in include/se
 
 target_compile_options(serene
   PRIVATE
+  -stdlib=libc++
   # LLVM has it's own RTTI
   -fno-rtti
   -fno-builtin-strlen
+  # Don't link against system's default libc++ or libstdc++
+  # -nostdinc++
+  # -nostdlib++
+
+  # Do not link any default library, We want to be explicit
+  # -nodefaultlibs
+  # -nostdinc
 
   # Dedicate a section to each function, so the linker
   # can do a better job on dead code elimination
@@ -106,14 +125,13 @@ target_compile_options(serene
 
 target_link_options(serene
   PRIVATE
-  -fuse-ld=lld
-  -Wl,-gc-sections
-
+  -stdlib=libc++
+  -lc++abi
+  -Wl,--gc-sections
   $<$<CONFIG:RELEASE>:-s>
 
   $<$<CONFIG:DEBUG>:-fsanitize=address>
   $<$<CONFIG:DEBUG>:-static-libsan>
-
   # Do not link against shared libraries
   --static
 )
@@ -126,15 +144,18 @@ if(SERENE_ENABLE_TIDY)
   set_target_properties(serene PROPERTIES CXX_CLANG_TIDY ${CLANG_TIDY_PATH})
 endif()
 
-
-
-# TODO: Setup the THINLTO on release
 if(SERENE_ENABLE_THINLTO)
+  include(CheckIPOSupported)
+  # Optional IPO. Do not use IPO if it's not supported by compiler.
+  check_ipo_supported(RESULT result OUTPUT output)
+  if(result)
+    set_property(TARGET serene PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+  else()
+    message(WARNING "IPO is not supported: ${output}")
+    message(WARNING "Make sure to use lld")
+  endif()
 endif()
 
-# target_link_libraries(serene
-#   PRIVATE
-#   )
 
 include(GNUInstallDirs)
 
