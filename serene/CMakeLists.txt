@@ -89,13 +89,6 @@ target_compile_options(serene
   # LLVM has it's own RTTI
   -fno-rtti
   -fno-builtin-strlen
-  # Don't link against system's default libc++ or libstdc++
-  # -nostdinc++
-  # -nostdlib++
-
-  # Do not link any default library, We want to be explicit
-  # -nodefaultlibs
-  # -nostdinc
 
   # Dedicate a section to each function, so the linker
   # can do a better job on dead code elimination
@@ -127,6 +120,7 @@ target_link_options(serene
   PRIVATE
   -stdlib=libc++
   -lc++abi
+  #--rtlib=compiler-rt
   -Wl,--gc-sections
   $<$<CONFIG:RELEASE>:-s>
 
@@ -149,6 +143,7 @@ if(SERENE_ENABLE_THINLTO)
   # Optional IPO. Do not use IPO if it's not supported by compiler.
   check_ipo_supported(RESULT result OUTPUT output)
   if(result)
+    message(STATUS "IPO is supported and is turned on")
     set_property(TARGET serene PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
   else()
     message(WARNING "IPO is not supported: ${output}")
