@@ -33,9 +33,14 @@ BDWGC_BUILD_DIR="$DEPS_BUILD_DIR/${BDWGC_DIR_NAME}_build"
 BDWGC_INSTALL_DIR="$DEPS_BUILD_DIR/$BDWGC_DIR_NAME.$BDWGC_VERSION"
 
 ZSTD_CLI="zstd --ultra -22 -T$(nproc)"
+TARGET="x86_64-pc-linux-musl"
+COMPILER_ARGS="-fno-sanitize=all"
+
+export TARGET COMPILER_ARGS
 
 # shellcheck source=/dev/null
 source "scripts/toolchain.sh"
+
 
 function build_bdwgc() { ## Builds the BDW GC
     local version
@@ -163,12 +168,15 @@ function info_bdwgc() {
     info "export BDWgc_DIR='$BDWGC_INSTALL_DIR/lib64/cmake/bdwgc'"
 }
 
+
 function build_musl() {
-    local version repo src install_dir build_dir
+    local version repo src install_dir build_dir toolchain_dir old_path
 
     version="$MUSL_VERSION"
-    install_dir="$DEPS_BUILD_DIR/musl.$version"
+    #install_dir="$DEPS_BUILD_DIR/musl.0.$version"
+    install_dir="$DEPS_BUILD_DIR/llvm.0.$LLVM_VERSION"
     build_dir="$DEPS_BUILD_DIR/musl_build.$version"
+    toolchain_dir="$DEPS_BUILD_DIR/stage0"
     repo="${MUSL_REPO:-git://git.musl-libc.org/musl}"
     src="$DEPS_SOURCE_DIR/musl.$version"
 
@@ -187,10 +195,22 @@ function build_musl() {
     mkdir -p "$install_dir"
 
     _push "$build_dir"
-    ./configure --disable-shared --prefix="$install_dir"
 
+    old_path="$PATH"
+
+    PATH="$toolchain_dir/bin:$PATH"
+    CC="clang"
+    #CC="$TARGET-gcc"
+    #CFLAGS="$COMPILER_ARGS"
+    #CFLAGS="--sysroot $toolchain_dir"
+
+    export CC CFLAGS
+
+    ./configure --prefix="$install_dir"
     make -j "$(nproc)"
     make install
+
+    PATH="$old_path"
     _pop
     info "'musl' version '$version' installed at '$install_dir'"
 }

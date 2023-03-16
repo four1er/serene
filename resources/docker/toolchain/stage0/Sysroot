@@ -1,0 +1,22 @@
+FROM alpine:edge
+
+RUN apk update \
+    && apk upgrade \
+    && apk add --no-cache \
+    alpine-sdk \
+    linux-headers \
+    gcc \
+    g++ \
+    libgcc \
+    build-base \
+    zlib \
+    zlib-dev \
+    zstd \
+    zstd-dev
+    # clang-dev \
+    # compiler-rt \
+    # libc++-dev \
+    # llvm-runtimes \
+    # libc++-static \
+    # llvm-libunwind \
+    # lld \
