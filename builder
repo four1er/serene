@@ -54,27 +54,19 @@ source "$ME/scripts/devfs.sh"
 # -----------------------------------------------------------------------------
 # Dependencies
 # -----------------------------------------------------------------------------
-# All the versions in this section are git refs.
-# These dependencies handled by the builder script separately, meaning that
-# during the build process of Serene, these dependencies must be present but
-# the builder script will not build them as part of the build process. They
-# can be built using the `builder deps` subcommand.
-LLVM_VERSION="9fda8322243168cbfcb78c4cf80afa838473a573"
-IWYU_VERSION="435ad9d35ceee7759ea8f8fd658579e979ee5146"
-BDWGC_VERSION="release-8_2"
-MUSL_VERSION="v1.2.3"
-# We need this version to use it with our ldd when creating the toolchain
-LLVM_MAJOR_VERSION="17"
+# The builder script can download the toolchain for linux X86_64 and set it up.
+# The toolchain is based on Musl, but you don't have to use it. But be aware
+# that using glibc with serene means that you can't cross compile with it.
 
-# The target architectures that we want to build Serene in and also we want
-# serene to support. We use this variable when we're building the llvm
-TARGET_ARCHS="X86;AArch64;AMDGPU;ARM;RISCV;WebAssembly"
-export TARGET_ARCHS LLVM_MAJOR_VERSION MUSL_VERSION BDWGC_VERSION IWYU_VERSION \
-       LLVM_VERSION
+# Here is the version of llvm that we use
+LLVM_VERSION="da3cd333bea572fb10470f610a27f22bcb84b08c"
+LLVM_MAJOR_VERSION="16"
+
+export LLVM_VERSION LLVM_MAJOR_VERSION
+
 # -----------------------------------------------------------------------------
 # CONFIG VARS
 # -----------------------------------------------------------------------------
-
 # By default Clang is the compiler that we use and support. But you may use
 # whatever you want. But just be aware of the fact that we might not be able
 # to help you in case of any issue.
@@ -99,8 +91,13 @@ export BUILD_DIR
 SERENE_HOME_DIR="$HOME/.serene"
 export SERENE_HOME_DIR
 
-DEPS_BUILD_DIR="$SERENE_HOME_DIR/env"
-export DEPS_BUILD_DIR
+TOOLCHAIN_DIR="$SERENE_HOME_DIR/toolchain"
+export TOOLCHAIN_DIR
+
+# Set this to anything beside true if you don't want the builder
+# script to manage the toolchain. E.g. you have your own toolchain
+USE_SERENE_TOOLCHAIN="true"
+export USE_SERENE_TOOLCHAIN
 
 # Serene subprojects. We use this array to run common tasks on all the projects
 # like running the test cases
@@ -116,14 +113,14 @@ export ASAN_OPTIONS
 LSAN_OPTIONS=suppressions="$ME/.ignore_sanitize"
 export LSAN_OPTIONS
 
-# shellcheck source=./scripts/deps.sh
-source "$ME/scripts/deps.sh"
+# shellcheck source=./scripts/toolchain.sh
+source "$ME/scripts/toolchain.sh"
 
 
 # -----------------------------------------------------------------------------
 # Initialization
 # -----------------------------------------------------------------------------
-mkdir -p "$DEPS_BUILD_DIR"
+mkdir -p "$TOOLCHAIN_DIR"
 
 
 # -----------------------------------------------------------------------------
@@ -163,6 +160,7 @@ function build-gen() {
           -DBDWGC_VERSION="$BDWGC_VERSION" \
           -DMUSL_VERSION="$MUSL_VERSION" \
           -C "$ME/cmake/caches/serene_$1.cmake" \
+          -DCMAKE_TOOLCHAIN_FILE="$ME/cmake/toolchains/x86_64-linux-musl.cmake" \
           "$ME" \
           "${@:2}"
     popd_build
@@ -171,10 +169,6 @@ function build-gen() {
 # -----------------------------------------------------------------------------
 # Subcomaands
 # -----------------------------------------------------------------------------
-
-function deps() { ## Manage the dependencies
-    manage_dependencies "$@"
-}
 
 function compile() { ## Compiles the project using the generated build scripts
     pushed_build
