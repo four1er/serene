@@ -1,6 +1,5 @@
 * Serene lang
- Build Status: [[https://ci.devheroes.codes/api/badges/Serene/Serene/status.svg]]
-
+ Build Status: <p align="center"><img src="https://ci.devheroes.codes/api/badges/Serene/Serene/status.svg" /></p>
 Serene is a modern typed lisp. It's not done and heavily under development.
 
 ** Dependencies
