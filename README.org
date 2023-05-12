@@ -1,5 +1,4 @@
 * Serene lang
- Build Status: <p align="center"><img src="https://ci.devheroes.codes/api/badges/Serene/Serene/status.svg" /></p>
 Serene is a modern typed lisp. It's not done and heavily under development.
 
 ** Dependencies
@@ -83,6 +82,10 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+* More Info
+  - Website: https://serene-lang.org
+  - CI: https://ci.devheroes.codes/Serene/serene
 
 * Get Help
   If you need help, or you just want to hang out, you can find us at:

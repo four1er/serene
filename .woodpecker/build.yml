@@ -10,7 +10,6 @@ pipeline:
   Build:
     image: beta.devheroes.codes/serene/ci:9
     commands:
-      - rm -rf /root/.serene/*
       - ./builder build
 
     volumes:
