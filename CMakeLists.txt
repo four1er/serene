@@ -17,7 +17,7 @@ cmake_minimum_required(VERSION 3.19)
 
 project(Serene
   VERSION 1.0.0
-  DESCRIPTION "A modern Lisp."
+  DESCRIPTION "A modern typed Lisp."
   LANGUAGES CXX C)
 
 # Clangd command file
@@ -39,6 +39,10 @@ option(SERENE_ENABLE_DOCS "Enable document generation" OFF)
 option(SERENE_ENABLE_TIDY "Enable clang tidy check" OFF)
 option(SERENE_DISABLE_CCACHE "Disable automatic ccache integration" OFF)
 option(SERENE_ENABLE_DEVTOOLS "Enable the devtools build" OFF)
+option(SERENE_DISABLE_MUSL "Disable musl libc (Musl is recommended)." OFF)
+option(SERENE_DISABLE_LIBCXX "Disable libc++ (libc++ is recommended)." OFF)
+option(SERENE_DISABLE_COMPILER_RT
+  "Disable compiler-rt (compiler-rt is recommended)." OFF)
 
 # LLVM
 # Info about the target llvm build
@@ -75,10 +79,6 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
   set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 
-  find_package(BDWgc 8.2.0 REQUIRED)
-  find_program(LLD_PROGRAM REQUIRED NAMES lld)
-  find_program(MLIRTBLGEN_PROGRAM REQUIRED NAMES mlir-tblgen)
-
   # Setup the basic compiler flags
   add_compile_options(
     -Wall
@@ -98,20 +98,6 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     -Woverloaded-virtual
     -Wdouble-promotion
     -Wformat=2)
-
-  add_link_options(-fuse-ld=lld)
-  # if ((SERENE_USE_LIBCXX) AND (NOT (SERENE_TOOLCHAIN_PATH)))
-  #   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -v")
-  #   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lc++abi")
-  # endif()
-
-  # if ((SERENE_USE_LIBCXX) AND (SERENE_TOOLCHAIN_PATH))
-  # endif()
-
-  # if (SERENE_USE_COMPILER_RT)
-  #   add_link_options(-rtlib=compiler-rt -stdlib=libc++ )
-  # endif()
-
 
 
   # CCache support ==============================

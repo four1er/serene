@@ -14,39 +14,50 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# LLVM setup =========================================
+# LLVM setup ==================================================================
 # Why not specify the version?
 # Since we use the development version of the LLVM all the time it doesn't
 # make sense to use a version here
 find_package(LLVM REQUIRED CONFIG)
 find_package(MLIR REQUIRED CONFIG)
 find_package(LLD REQUIRED CONFIG)
-#find_package(CLANG REQUIRED CONFIG)
+find_program(LLD_PROGRAM REQUIRED NAMES lld)
+
+find_package(BDWgc 8.2.0 REQUIRED)
+find_program(MLIRTBLGEN_PROGRAM REQUIRED NAMES mlir-tblgen)
+find_package(Clang REQUIRED CONFIG)
 
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 message(STATUS "Using MLIRConfig.cmake in: ${MLIR_DIR}")
 message(STATUS "Using LLDConfig.cmake in: ${LLD_DIR}")
-#message(STATUS "Using CLANGConfig.cmake in: ${CLANG_DIR}")
+message(STATUS "Using CLANGConfig.cmake in: ${Clang_DIR}")
 
 set(LLVM_RUNTIME_OUTPUT_INTDIR ${CMAKE_BINARY_DIR}/bin)
 set(LLVM_LIBRARY_OUTPUT_INTDIR ${CMAKE_BINARY_DIR}/lib)
 set(MLIR_BINARY_DIR ${CMAKE_BINARY_DIR})
 
-list(APPEND CMAKE_MODULE_PATH "${MLIR_CMAKE_DIR}")
-list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
-list(APPEND CMAKE_MODULE_PATH "${LLD_CMAKE_DIR}")
+# Make cmake modules available to load
+list(APPEND CMAKE_MODULE_PATH "${MLIR_DIR}")
+list(APPEND CMAKE_MODULE_PATH "${LLVM_DIR}")
+list(APPEND CMAKE_MODULE_PATH "${LLD_DIR}")
+list(APPEND CMAKE_MODULE_PATH "${Clang_DIR}")
 
 include(TableGen)
 include(AddLLVM)
 include(AddMLIR)
 include(HandleLLVMOptions)
+include(AddClang)
+# /LLVM setup =================================================================
 
+# Main Binary =================================================================
 add_executable(serene)
 
 set_target_properties(serene PROPERTIES
   VERSION ${PROJECT_VERSION}
   SOVERSION ${PROJECT_VERSION_MAJOR}
+  C_INCLUDE_WHAT_YOU_USE ${iwyu}
+  CXX_INCLUDE_WHAT_YOU_USE ${iwyu}
   # Warn on unused libs
   LINK_WHAT_YOU_USE TRUE
 )
@@ -63,21 +74,12 @@ target_include_directories(serene
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-
 # We don't want the generated files from table gen
 # to be treated as local since the contain warnings
 target_include_directories(serene SYSTEM PRIVATE
   ${PROJECT_BINARY_DIR}/include
-  # ${SERENE_LLVM_DIR}/include/x86_64-unknown-linux-gnu/c++/v1
-  # ${SERENE_LLVM_DIR}/include/c++/v1
-  #${MUSL_DIR}/include
 )
 
-target_link_directories(serene
-  PRIVATE
-  # ${SERENE_LLVM_DIR}/lib
-  # ${MUSL_DIR}/lib
-)
 
 # Autogenerate the `config.h` file
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/serene/config.h.in include/serene/config.h)
@@ -85,7 +87,8 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/serene/config.h.in include/se
 
 target_compile_options(serene
   PRIVATE
-  -stdlib=libc++
+  $<$<NOT:$<BOOL:${SERENE_DISABLE_LIBCXX}>>:-stdlib=libc++>
+
   # LLVM has it's own RTTI
   -fno-rtti
   -fno-builtin-strlen
@@ -98,7 +101,7 @@ target_compile_options(serene
   $<$<CONFIG:DEBUG>:-fsanitize=address>
   $<$<CONFIG:DEBUG>:-static-libsan>
   $<$<CONFIG:DEBUG>:-g3>
-  $<$<CONFIG:DEBUG>:-O1>
+  $<$<CONFIG:DEBUG>:-O0>
   $<$<CONFIG:DEBUG>:-ggdb>
   # For the sake of debugging
   $<$<CONFIG:DEBUG>:-fno-inline>
@@ -111,16 +114,16 @@ target_compile_options(serene
 
   $<$<CONFIG:DEBUG>:-fno-omit-frame-pointer>
   $<$<CONFIG:RELEASE>:-fomit-frame-pointer>
-
   $<$<CONFIG:RELEASE>:-O3>
   $<$<CONFIG:RELEASE>:-fmerge-all-constants>
 )
 
 target_link_options(serene
   PRIVATE
-  -stdlib=libc++
-  -lc++abi
-  #--rtlib=compiler-rt
+  $<$<NOT:$<BOOL:${SERENE_DISABLE_LIBCXX}>>:-stdlib=libc++>
+  $<$<NOT:$<BOOL:${SERENE_DISABLE_LIBCXX}>>:-lc++abi>
+  $<$<NOT:$<BOOL:${SERENE_DISABLE_COMPILER_RT}>>:--rtlib=compiler-rt>
+
   -Wl,--gc-sections
   $<$<CONFIG:RELEASE>:-s>
 
