@@ -68,6 +68,17 @@ break point on the ~main~ function (~b main~) then use the following commands on
 * Cheatsheets
   - [[https://github.com/muqsitnawaz/modern-cpp-cheatsheet][Modern C++ Cheatsheet]]
 
+* More Info
+  - Website: https://serene-lang.org
+  - CI: https://ci.devheroes.codes/Serene/serene
+
+* Get Help
+  If you need help, or you just want to hang out, you can find us at:
+
+  - *IRC*: *#serene-lang* on the libera chat server
+  - *Matrix*: https://app.element.io/#/room/#serene:matrix.org
+  - *MailingList*: https://www.freelists.org/list/serene
+
 * License
 Copyright (c) 2019-2023 Sameer Rahmani <lxsameer@gnu.org>
 
@@ -82,14 +93,3 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-* More Info
-  - Website: https://serene-lang.org
-  - CI: https://ci.devheroes.codes/Serene/serene
-
-* Get Help
-  If you need help, or you just want to hang out, you can find us at:
-
-  - *IRC*: *#serene-lang* on the libera chat server
-  - *Matrix*: https://app.element.io/#/room/#serene:matrix.org
-  - *MailingList*: https://www.freelists.org/list/serene
