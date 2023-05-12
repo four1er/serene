@@ -1,39 +1,35 @@
 * Serene lang
  Build Status: [[https://ci.devheroes.codes/api/badges/Serene/Serene/status.svg]]
 
-
-** Fetching the source code
-Serene comes with the build time dependencies as git submodules that set to the correct
-version (Commit SHA). They live in the ~deps~ directory. So, after cloning Serene's repository,
-you need to initialize the submodules as follows:
-
- #+BEGIN_SRC bash
-   git clone git@git.devherose.codes:serene/serene.git
-   cd serene
-   git submodule init
-   git submodule update
- #+END_SRC
-
-Obviously, you need to build the dependencies before you can build *Serene*. But if you are
-running GNU/Linux, the ~builder~ script can do that for you (Instructions below). Currently,
-the ~builder~ script can take care of dependencies only on GNU/Linux, but contributions are
-welcome to port it to other platforms as well.
+Serene is a modern typed lisp. It's not done and heavily under development.
 
 ** Dependencies
     Here is the list of dependencies that need to be present:
 
-    - LLVM
-      For exact version, check out the submodule under =deps/llvm-project=
+    - LLVM (You can find the exact version in the ~builder~ script)
     - CMake ~>= 3.19~
     - Ninja
-    - include-what-you-use (Checkout the corresponding submodule)
-    - doxygen (If you want to build the docs as well)
+    - include-what-you-use
     - Valgrind (Optional and only for development)
     - CCache (If you want faster builds, specially with the LLVM)
-    - Boehm GC v8.2.0
-      Check out the submodule under =deps/bdwgc=. If you're building this library yourself,
+    - Boehm GC v8.2.2
       make sure to build in statically with ~-fPIC~ flag.
     - zstd (Only if you want to use prebuilt dependencies on Linux)
+    - Musl libc v1.2.3 (It's not required but highly recommended)
+    - libc++ (same version as LLVM abviously. It's not required but highly recommended)
+    - compiler-rt (same version as LLVM abviously. It's not required but highly recommended)
+
+   If you are using Linux (x86_64 only), then you're in luck. The ~builder~ script
+   will download the required toolchain automatically for you and set it up. So,
+   you can just use ~builder~ subcommands to develop serene.
+
+   You can disable this behaviour by setting the =USE_SERENE_TOOLCHAIN= env variable to
+   anything beside "true".
+
+   Serene build system uses Musl, libc++, and compiler-rt to generate a static binary.
+   You can use glibc, libgcc, and libstdc++ instead. But you might not be able to
+   cross compiler with Serene and also if anything happen to you, I might not be able
+   to help (I'll try for sure).
 
 ** Setup development environment
 Before, you have to set up the necessary git hooks as follows:
@@ -42,37 +38,6 @@ Before, you have to set up the necessary git hooks as follows:
  ./builder setup
  #+END_SRC
 
-** Build and installing dependencies (Linux only)
-The ~builder~ script can build the necessary dependencies for you. Just make sure to pull down
-all the dependencies as instructed above and follow:
-
- #+BEGIN_SRC bash
-   # Download prebuilt dependencies instead of building from source (X86_64 only)
-
-   # Try to pull a prebuilt package for the toolchain (including llvm libraries)
-   ./builder deps pull toolchain
-   # Try to pull a prebuilt package for BDWGC
-   ./builder deps pull bdwgc
-
-   # Or build from source
-   ./builder deps build toolchain
-   ./builder deps build bdwgc
- #+END_SRC
-
- After building or pulling the dependencies, you'll have all of them under =~/.serene/env/=.
- All you need to do is to activate the environment and build Serene itself.
-
-After a =pull= or =build=, the ~builder~ script will let you know that what environment variables
-are necessary to activate the dependencies. Also, if you are lazy like me, you can just set
-the =SERENE_AUTO_DEP= to =true= and let the builder script set those for you. E.g.
-
- #+BEGIN_SRC bash
-   export SERENE_AUTO_DEP="true"
- #+END_SRC
-
-Be advised that, setting up the above variable makes it a bit harder to switch to other environment
-in the same shell that usually is not the case.
-
 ** Build and installing dependencies (Other platforms)
 Currently, the ~builder~ script does not support any platform beside GNU/Linux. So, you
 need to build the dependencies yourself and make them available to the builder.
@@ -80,32 +45,15 @@ need to build the dependencies yourself and make them available to the builder.
 By the way, If you are interested, you can just hack the builder script and accommodate your
 platform and contribute your changes to the project.
 
-To build the dependencies in your platform, you can use the =./scripts/deps.sh= as
-a reference.
+To build the dependencies in your platform, you can use the https://devheroes.codes/Serene/bootstrap-toolchain
+repo as a reference or even modify it to support other platforms. Any contribution will be appreciated.
 
 * How to build
 To build for development (Debug mode) just use =./builder build= to setup the build system,
 and build the project once, and then you can just use =./builder compile= to build the changed files
 only.
 
-Check out the =builder= script for more subcommands and details.
-
-** Head's up for devs
-While you're working on *Serene* be mindful of:
-- In =DEBUG= mode, we dynamically link against =libsan= since we build the =libserene=
-  as a shared lib by default. This means we need to =LD_PRELOAD= the =libclang_rt= before we run
-  any executable. If you're using the =builder= script, you're all set. Otherwise, you can run an
-  executable like:
-
-  #+BEGIN_SRC bash
-    LD_PRELOAD=$(clang -print-file-name=libclang_rt.asan-x86_64.so) /path/to/executable
-  #+END_SRC
-
-** Build the devtools
-We have our own version of `mlir-opt` which is `slir-opt` and also we have an LSP server for SLIR too.
-Both are in the ~devtools~ directory and in to build them all you need to do is to use
-~-DSERENE_ENABLE_DEVTOOLS=ON~ parameter with cmake for example ~./builder build -DSERENE_ENABLE_DEVTOOLS=ON~
-will do the job for you.
+Check out the ~builder~ script for more subcommands and details.
 
 * How to Debug
 Since we're using the Boehm GC, to use a debugger, we need to turn off some of the signal
@@ -141,4 +89,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   If you need help, or you just want to hang out, you can find us at:
 
   - *IRC*: *#serene-lang* on the libera chat server
+  - *Matrix*: https://app.element.io/#/room/#serene:matrix.org
   - *MailingList*: https://www.freelists.org/list/serene

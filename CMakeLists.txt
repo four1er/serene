@@ -99,7 +99,6 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     -Wdouble-promotion
     -Wformat=2)
 
-
   # CCache support ==============================
   if(SERENE_DISABLE_CCACHE)
     message(STATUS "CCache support is disabled")
@@ -141,64 +140,6 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     FetchContent_MakeAvailable(Catch2)
     list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
   endif()
-
-  # LLVM setup =========================================
-  # find_package(LLVM REQUIRED all-targets CONFIG)
-  # find_package(MLIR REQUIRED CONFIG)
-  # find_package(LLD REQUIRED CONFIG)
-
-  # message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
-  # message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
-  # message(STATUS "Using MLIRConfig.cmake in: ${MLIR_DIR}")
-  # message(STATUS "Using LLDConfig.cmake in: ${LLD_DIR}")
-
-  # set(LLVM_RUNTIME_OUTPUT_INTDIR ${CMAKE_BINARY_DIR}/bin)
-  # set(LLVM_LIBRARY_OUTPUT_INTDIR ${CMAKE_BINARY_DIR}/lib)
-  # set(MLIR_BINARY_DIR ${CMAKE_BINARY_DIR})
-
-  # list(APPEND CMAKE_MODULE_PATH "${MLIR_CMAKE_DIR}")
-  # list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
-  # list(APPEND CMAKE_MODULE_PATH "${LLD_CMAKE_DIR}")
-
-  # include(TableGen)
-  # include(AddLLVM)
-  # include(AddMLIR)
-  # include(HandleLLVMOptions)
-
-  # include_directories(SYSTEM ${LLVM_INCLUDE_DIRS})
-
-  # separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
-  # add_definitions(${LLVM_DEFINITIONS_LIST})
-
-  # link_directories(${LLVM_BUILD_LIBRARY_DIR})
-  # add_definitions(${LLVM_DEFINITIONS})
-
-
-  # set(CONDITIONAL_COMPONENTS "")
-
-  # if(LLVM_USE_PERF)
-  #   list(APPEND CONDITIONAL_COMPONENTS PerfJITEvents)
-  # endif()
-
-  # llvm_map_components_to_libnames(llvm_libs
-  #   core
-  #   support
-  #   jitlink
-  #   orcjit
-  #   ExecutionEngine
-  #   ${CONDITIONAL_COMPONENTS}
-  #   ${LLVM_TARGETS_TO_BUILD}
-  #   )
-
-  # # Serene Setup ===================================
-
-
-  # # Make sure that our source directory is on the current cmake module path so
-  # # that we can include cmake files from this directory.
-  # list(INSERT CMAKE_MODULE_PATH 0
-  #   "${CMAKE_CURRENT_SOURCE_DIR}/cmake/"
-  #   "${LLVM_COMMON_CMAKE_UTILS}/Modules"
-  #   )
 
   add_subdirectory(serene)
   # include(tablegen-serene)
