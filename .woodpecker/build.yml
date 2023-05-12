@@ -10,14 +10,9 @@ pipeline:
   Build:
     image: beta.devheroes.codes/serene/ci:9
     commands:
-      - pwd
-      - ./builder deps pull toolchain
-      - ./builder deps pull bdwgc
-      - export llvm_version=$(git ls-tree HEAD deps/llvm-project|awk '{print $3}')
-      - export bdwgc_version=$(git ls-tree HEAD deps/bdwgc|awk '{print $3}')
-      - export PATH=/root/.serene/env/llvm.$${llvm_version}/bin:$PATH
-      - export BDWgc_DIR='/root/.serene/env/bdwgc.$${bdwgc_version}/lib64/cmake/bdwgc'
+      - rm -rf /root/.serene/
+      - mkdir -p /root/.serene/
       - ./builder build
 
     volumes:
-      - serene_config:/root/.serene
+      - serene_config:/root/.serene/
