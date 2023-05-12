@@ -138,7 +138,6 @@ function gen_precompile_header_index() {
     } > ./include/serene_precompiles.h
 }
 
-
 function pushed_build() {
     mkdir -p "$BUILD_DIR"
     pushd "$BUILD_DIR" > /dev/null || return
@@ -151,16 +150,20 @@ function popd_build() {
 
 
 function build-gen() {
+    local args
+    setup_toolchain
+    args=(
+        "-DSERENE_TOOLCHAIN_PATH=$SERENE_TOOLCHAIN_PATH"
+        "-DCMAKE_TOOLCHAIN_FILE=$ME/cmake/toolchains/x86_64-linux-musl.cmake"
+        "-C"
+        "$ME/cmake/caches/$1.cmake"
+    )
+
     pushed_build
+
     info "Running: "
-    info "cmake -G Ninja" -C "$ME/cmake/caches/serene_$1.cmake" "$ME" "${@:2}"
-    cmake -G Ninja \
-          -DSERENE_CONFIG_HOME="$SERENE_HOME_DIR" \
-          -DLLVM_VERSION="$LLVM_VERSION" \
-          -DBDWGC_VERSION="$BDWGC_VERSION" \
-          -DMUSL_VERSION="$MUSL_VERSION" \
-          -C "$ME/cmake/caches/serene_$1.cmake" \
-          -DCMAKE_TOOLCHAIN_FILE="$ME/cmake/toolchains/x86_64-linux-musl.cmake" \
+    info "cmake -G Ninja" "${args[@]}" "$ME" "${@:2}"
+    cmake -G Ninja "${args[@]}" \
           "$ME" \
           "${@:2}"
     popd_build
@@ -180,7 +183,7 @@ function build() { ## Builds the project by regenerating the build scripts
     local cpus
 
     rm -rf "$BUILD_DIR"
-    build-gen "dev" "$@"
+    build-gen "debug" "$@"
     pushed_build
 
     cpus=$(nproc)
@@ -191,7 +194,7 @@ function build() { ## Builds the project by regenerating the build scripts
 function build-20() { ## Builds the project using C++20 (will regenerate the build)
     rm -rf "$BUILD_DIR"
     pushed_build
-    build-gen "dev" -DCPP_20_SUPPORT=ON "$@"
+    build-gen "debug" -DCPP_20_SUPPORT=ON "$@"
     cmake --build .
     popd_build
 }
@@ -203,7 +206,7 @@ function build-tidy() { ## Builds the project using clang-tidy (It takes longer 
 function build-release() { ## Builds the project in "Release" mode
     rm -rf "$BUILD_DIR"
     pushed_build
-    build-gen "prod" "$@"
+    build-gen "release" "$@"
     cmake --build . --config Release
     popd_build
 }
@@ -212,7 +215,7 @@ function build-docs() { ## Builds the documentation of Serene
     rm -rf "$BUILD_DIR"
     pip install -r "$ME/docs/requirements.txt"
     pushed_build
-    build-gen "dev" -DSERENE_ENABLE_DOCS=ON "$@"
+    build-gen "debug" -DSERENE_ENABLE_DOCS=ON "$@"
     cmake --build . --parallel
     popd_build
 }
@@ -263,7 +266,7 @@ function tests() { ## Runs all the test cases
 function build-tests() { ## Generates and build the project including the test cases
     rm -rf "$BUILD_DIR"
     pushed_build
-    build-gen "dev" -DSERENE_BUILD_TESTING=ON "$@"
+    build-gen "debug" -DSERENE_BUILD_TESTING=ON "$@"
     cmake --build . --parallel
     popd_build
 }

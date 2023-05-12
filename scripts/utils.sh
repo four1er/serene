@@ -101,7 +101,7 @@ function http_pull() {
     pkg_name="$1"
     version="$2"
     output="$3"
-    url="$DEV_HEROES/api/packages/serene/generic/$pkg_name/$version/$pkg_name.$version.zstd"
+    url="$DEV_HEROES/api/packages/serene/generic/$pkg_name/$version/$pkg_name.$version.tar.zstd"
 
     info "Fetching '$url'..."
 
