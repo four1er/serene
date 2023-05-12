@@ -10,8 +10,10 @@ pipeline:
   Build:
     image: beta.devheroes.codes/serene/ci:9
     commands:
-      - rm -rf /root/.serene/*
-      - ./builder build
+      # Uncomment this when running with a new toolchain for the
+      # first time to save up space
+      # - rm -rf /root/.serene/*
+      - ./builder build -DSERENE_DISABLE_CCACHE=ON
 
     volumes:
       - serene_config:/root/.serene/
