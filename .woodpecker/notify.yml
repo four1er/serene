@@ -12,7 +12,7 @@ pipeline:
 
       matrix_msg: "[${CI_REPO}][<b>FAILED</b>] Branch: ${CI_BRANCH} - Job #${CI_BUILD_NUMBER}"
     when:
-      - evaluate: 'CI_STEP_STATUS == "failure" || CI_PREV_PIPELINE_STATUS == "failure"'
+      status: [ failure ]
 
 depends_on:
   - lint
