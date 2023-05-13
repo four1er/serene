@@ -18,5 +18,5 @@ depends_on:
   - lint
   - build
 
-runs_on: [ success, failure ]
+runs_on: [ failure ]
 skip_clone: true
