@@ -13,8 +13,6 @@ pipeline:
       # Uncomment this when running with a new toolchain for the
       # first time to save up space
       # - rm -rf /root/.serene/*
-      - pwd
-      - ls
       - ./builder build -DSERENE_DISABLE_CCACHE=ON
 
     volumes:

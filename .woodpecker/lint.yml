@@ -8,7 +8,7 @@ clone:
 
 pipeline:
   Linters:
-    image: beta.devheroes.codes/serene/ci:9
+    image: devheroes.codes/serene/ci:10
     commands:
       - ./builder setup
       - export FILES="$(git diff --name-only HEAD HEAD~1)"

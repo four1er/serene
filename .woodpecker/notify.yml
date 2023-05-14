@@ -14,6 +14,22 @@ pipeline:
     when:
       status: [ failure ]
 
+  Mailer:
+    image: lxsameer/woodpecker_mailer:4
+    settings:
+      from: ci@serene-lang.org
+      user:
+        from_secret: mail_user
+      password:
+        from_secret: mail_pass
+      to: ${CI_COMMIT_AUTHOR_EMAIL}
+      subject: "[${CI_REPO}] JOB #${CI_BUILD_NUMBER} - ${CI_PREV_STEP_STATUS}"
+      text: |
+        BUILD: ${CI_BUILD_LINK}
+        COMMIT: ${CI_COMMIT_LINK}
+    when:
+      status: [ failure ]
+
 depends_on:
   - lint
   - build
