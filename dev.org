@@ -59,6 +59,11 @@ Then here is the list or parsers that we have considered
 - [[https://github.com/bytecodealliance/wasmtime/tree/master/cranelift][Source tree]]
 ** Type Systems
 - [[https://www.cs.cmu.edu/~rwh/courses/hott/][Homotopy Type Theory]]
+- No, dynamic type systems are not inherently more open:
+  https://lexi-lambda.github.io/blog/2020/01/19/no-dynamic-type-systems-are-not-inherently-more-open/
+- Type theory resources:
+  https://github.com/jozefg/learn-tt
+
 ** Memory management
 - [[https://deepu.tech/memory-management-in-golang/][Visualizing memory management in Golang]]
 - [[http://goog-perftools.sourceforge.net/doc/tcmalloc.html][TCMalloc : Thread-Caching Malloc]]
@@ -88,6 +93,10 @@ This is not GC but a tool to debug GC and memory allocation.
 It would be cool to have macro to instruct the compiler about the likelyhood
 of a branch in a conditional. Something similar to kernel's *likely* and *unlikely*
 macros
+*** How to learn compilers: LLVM Edition
+https://lowlevelbits.org/how-to-learn-compilers-llvm-edition/
+*** Pointers Are Complicated III, or: Pointer-integer casts exposed
+https://www.ralfj.de/blog/2022/04/11/provenance-exposed.html
 *** Execution Instrumentation
 The compiler should be able to embed some code in the program to collect data about
 the different execution paths or function instrumentation and other useful data the
@@ -107,6 +116,7 @@ on ADF
 *** Emacs mode
 - [[https://www.wilfred.me.uk/blog/2015/03/19/adding-a-new-language-to-emacs/][Adding A New Language to Emacs]]
 - [[https://www.wilfred.me.uk/blog/2014/09/27/the-definitive-guide-to-syntax-highlighting/][The Definitive Guide To Syntax Highlighting]]
+
 ** Linker
 - [[https://lwn.net/Articles/276782/][20 part linker essay]]
 - [[https://lld.llvm.org/index.html][LLD Usage]]
@@ -123,8 +133,9 @@ on ADF
   A nice to read article on some of the common problems when linking statically
   with none default libc or libc++
 
-** Useful courses
+** Useful courses and resources
 -  https://www.cs.cornell.edu/courses/cs6120/2020fa/lesson/
+-  https://cs.lmu.edu/~ray/notes/languagedesignnotes/
 * Considerations
 ** Hashmaps
 *** DOS attack
