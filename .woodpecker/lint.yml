@@ -8,8 +8,9 @@ clone:
 
 pipeline:
   Linters:
-    image: devheroes.codes/serene/ci:10
+    image: lxsameer/serene_ci:13
     commands:
+      - export SERENE_CI=true
       - ./builder setup
       - export FILES="$(git diff --name-only HEAD HEAD~1)"
       - pre-commit run --files "$FILES"

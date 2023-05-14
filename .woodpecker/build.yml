@@ -8,7 +8,7 @@ clone:
 
 pipeline:
   Build:
-    image: devheroes.codes/serene/ci:10
+    image: lxsameer/serene_ci:13
     commands:
       # Uncomment this when running with a new toolchain for the
       # first time to save up space

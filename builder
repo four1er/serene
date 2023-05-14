@@ -341,8 +341,12 @@ function create-devfs-image() { ## Create the devfs images locally (requires sud
 }
 
 function setup() { ## Setup the working directory and make it ready for development
+    local args
+    if [[ "$SERENE_CI" == "true" ]]; then
+        args=--break-system-packages
+    fi
     if command -v python3 >/dev/null 2>&1; then
-        pip install pre-commit
+        pip install "$args" pre-commit
         pre-commit install
     else
         error "Python is required to setup pre-commit"
