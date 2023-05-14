@@ -7,7 +7,17 @@ clone:
       recursive: false
 
 pipeline:
+  Linters:
+    group: build
+    image: lxsameer/serene_ci:13
+    commands:
+      - export SERENE_CI=true
+      - ./builder setup
+      - export FILES="$(git diff --name-only HEAD HEAD~1)"
+      - pre-commit run --files "$FILES"
+
   Build:
+    group: build
     image: lxsameer/serene_ci:13
     commands:
       # Uncomment this when running with a new toolchain for the
@@ -17,3 +27,37 @@ pipeline:
 
     volumes:
       - serene_config:/root/.serene/
+
+  ChatNotify:
+    image: lxsameer/notify:3
+    settings:
+      matrix_room_id:
+        from_secret: matrix_room
+      matrix_access_token:
+        from_secret: matrix_token
+
+      matrix_user:
+        from_secret: matrix_user
+
+      matrix_msg: "[${CI_REPO}] Job #${CI_BUILD_NUMBER} <b>failed</b> for branch <b>${CI_COMMIT_BRANCH}</b>. ${CI_BUILD_LINK}"
+    secrets: [ matrix_room, matrix_token, matrix_user ]
+    when:
+      - status: [failure]
+
+  MailNotify:
+    image: lxsameer/woodpecker_mailer:4
+    settings:
+      from: ci@serene-lang.org
+      user:
+        from_secret: mailer_user
+      password:
+        from_secret: mailer_password
+      to: ${CI_COMMIT_AUTHOR_EMAIL}
+      subject: "[${CI_REPO}] JOB #${CI_BUILD_NUMBER} failed for branch '${CI_COMMIT_BRANCH}'."
+      text: |
+        BUILD: ${CI_BUILD_LINK}
+        COMMIT: ${CI_COMMIT_LINK}
+    when:
+      - status: [failure]
+
+    secrets: [ mail_pass, mail_user ]
