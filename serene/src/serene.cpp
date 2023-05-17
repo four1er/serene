@@ -16,32 +16,55 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <iomanip>
-#include <iostream>
-#include <memory>
+#include "serene/commands.h"
+#include "serene/config.h"
 
-struct Vec3 {
-  int x, y, z;
+#include <llvm/Support/CommandLine.h>
+#include <llvm/Support/FormatVariadic.h>
 
-  // following constructor is no longer needed since C++20
-  Vec3(int x = 0, int y = 0, int z = 0) noexcept : x(x), y(y), z(z) {}
+#include <cstring>
+#include <string>
 
-  friend std::ostream &operator<<(std::ostream &os, const Vec3 &v) {
-    return os << "{ x=" << v.x << ", y=" << v.y << ", z=" << v.z << " }";
+namespace cl = llvm::cl;
+
+static std::string banner =
+    llvm::formatv("\n\nSerene Compiler Version {0}"
+                  "\nCopyright (C) 2019-2023 "
+                  "Sameer Rahmani <lxsameer@gnu.org>\n"
+                  "Serene comes with ABSOLUTELY NO WARRANTY;\n"
+                  "This is free software, and you are welcome\n"
+                  "to redistribute it under certain conditions; \n"
+                  "for details take a look at the LICENSE file.\n",
+                  SERENE_VERSION);
+
+namespace serene::opts {
+// Global options ===========================================================
+static cl::opt<bool> verbose("v", cl::desc("Use verbose output"),
+                             cl::cat(cl::getGeneralCategory()),
+                             cl::sub(cl::SubCommand::getAll()));
+
+// Subcommands ==============================================================
+// We don't use this subcommand directly but we need it for the CLI interface
+static cl::SubCommand CC("cc", "Serene's C compiler interface");
+
+static cl::SubCommand Run("run", "Run a Serene file");
+} // namespace serene::opts
+
+int main(int argc, char **argv) {
+
+  // We don't use llvm::cl here cause we want to let
+  // the clang take care of the argument parsing.
+  if ((argc >= 2) && (strcmp(argv[1], "cc") == 0)) {
+    return serene::commands::cc(--argc, ++argv);
   }
-};
 
-int main() {
-  // Use the default constructor.
-  std::unique_ptr<Vec3> v1 = std::make_unique<Vec3>();
-  // Use the constructor that matches these arguments
-  std::unique_ptr<Vec3> v2 = std::make_unique<Vec3>(0, 1, 2);
-  // Create a unique_ptr to an array of 5 elements
-  std::unique_ptr<Vec3[]> v3 = std::make_unique<Vec3[]>(5);
+  // We start using llvm::cl from here onward which
+  // enforces our rules even for the subcommands.
+  cl::ParseCommandLineOptions(argc, argv, banner);
 
-  std::cout << "make_unique<Vec3>():      " << *v1 << '\n'
-            << "make_unique<Vec3>(0,1,2): " << *v2 << '\n'
-            << "make_unique<Vec3[]>(5):   ";
-  for (int i = 0; i < 5; i++)
-    std::cout << std::setw(i ? 30 : 0) << v3[static_cast<size_t>(i)] << '\n';
+  if (serene::opts::Run) {
+    serene::commands::run();
+  }
+
+  return 0;
 }
