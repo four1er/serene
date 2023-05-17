@@ -141,6 +141,49 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
   endif()
 
+  # LLVM setup ==================================================================
+  # Why not specify the version?
+  # Since we use the development version of the LLVM all the time it doesn't
+  # make sense to use a version here
+  find_package(LLVM REQUIRED CONFIG)
+  find_package(MLIR REQUIRED CONFIG)
+  find_package(LLD REQUIRED CONFIG)
+  find_program(LLD_PROGRAM REQUIRED NAMES lld)
+
+  find_program(MLIRTBLGEN_PROGRAM REQUIRED NAMES mlir-tblgen)
+  find_package(Clang REQUIRED CONFIG)
+
+  message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
+  message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
+  message(STATUS "Using MLIRConfig.cmake in: ${MLIR_DIR}")
+  message(STATUS "Using LLDConfig.cmake in: ${LLD_DIR}")
+  message(STATUS "Using CLANGConfig.cmake in: ${Clang_DIR}")
+
+  set(LLVM_RUNTIME_OUTPUT_INTDIR ${CMAKE_BINARY_DIR}/bin)
+  set(LLVM_LIBRARY_OUTPUT_INTDIR ${CMAKE_BINARY_DIR}/lib)
+  set(MLIR_BINARY_DIR ${CMAKE_BINARY_DIR})
+
+  # Make cmake modules available to load
+  list(APPEND CMAKE_MODULE_PATH "${MLIR_DIR}")
+  list(APPEND CMAKE_MODULE_PATH "${LLVM_DIR}")
+  list(APPEND CMAKE_MODULE_PATH "${LLD_DIR}")
+  list(APPEND CMAKE_MODULE_PATH "${Clang_DIR}")
+
+  include(TableGen)
+  include(AddLLVM)
+  include(AddMLIR)
+  include(HandleLLVMOptions)
+  include(AddClang)
+
+  # This goes against the CMake's best practices to add
+  # these kind of settings to the targets only. But this
+  # is what LLVM recommends and we will stick to their
+  # recommendation.
+  include_directories(SYSTEM ${LLVM_INCLUDE_DIRS})
+  add_definitions(${LLVM_DEFINITIONS})
+
+  # /LLVM setup =================================================================
+
   add_subdirectory(serene)
   # include(tablegen-serene)
   # Create the tools we use to compile Serene

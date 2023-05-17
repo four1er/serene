@@ -228,8 +228,8 @@ function clean() { ## Cleans up the source dir and removes the build
     git clean -dxf
 }
 
-function run() { ## Runs `serenec` and passes all the given aruguments to it
-    "$BUILD_DIR"/serenec/serenec "$@"
+function run() { ## Runs `serene` and passes all the given aruguments to it
+    "$BUILD_DIR"/serene/serene "$@"
 }
 
 function lldb-run() { ## Runs `serenec` under lldb

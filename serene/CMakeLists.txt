@@ -14,41 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# LLVM setup ==================================================================
-# Why not specify the version?
-# Since we use the development version of the LLVM all the time it doesn't
-# make sense to use a version here
-find_package(LLVM REQUIRED CONFIG)
-find_package(MLIR REQUIRED CONFIG)
-find_package(LLD REQUIRED CONFIG)
-find_program(LLD_PROGRAM REQUIRED NAMES lld)
-
 find_package(BDWgc 8.2.0 REQUIRED)
-find_program(MLIRTBLGEN_PROGRAM REQUIRED NAMES mlir-tblgen)
-find_package(Clang REQUIRED CONFIG)
-
-message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
-message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
-message(STATUS "Using MLIRConfig.cmake in: ${MLIR_DIR}")
-message(STATUS "Using LLDConfig.cmake in: ${LLD_DIR}")
-message(STATUS "Using CLANGConfig.cmake in: ${Clang_DIR}")
-
-set(LLVM_RUNTIME_OUTPUT_INTDIR ${CMAKE_BINARY_DIR}/bin)
-set(LLVM_LIBRARY_OUTPUT_INTDIR ${CMAKE_BINARY_DIR}/lib)
-set(MLIR_BINARY_DIR ${CMAKE_BINARY_DIR})
-
-# Make cmake modules available to load
-list(APPEND CMAKE_MODULE_PATH "${MLIR_DIR}")
-list(APPEND CMAKE_MODULE_PATH "${LLVM_DIR}")
-list(APPEND CMAKE_MODULE_PATH "${LLD_DIR}")
-list(APPEND CMAKE_MODULE_PATH "${Clang_DIR}")
-
-include(TableGen)
-include(AddLLVM)
-include(AddMLIR)
-include(HandleLLVMOptions)
-include(AddClang)
-# /LLVM setup =================================================================
 
 # Main Binary =================================================================
 add_executable(serene)
@@ -74,12 +40,14 @@ target_include_directories(serene
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-# We don't want the generated files from table gen
-# to be treated as local since the contain warnings
-target_include_directories(serene SYSTEM PRIVATE
-  ${PROJECT_BINARY_DIR}/include
-)
+target_include_directories(serene SYSTEM PUBLIC
+  # We don't want the generated files from table gen
+  # to be treated as local since the contain warnings
+  ${PROJECT_BINARY_DIR}/serene/include)
 
+target_link_libraries(serene PRIVATE
+  LLVMSupport
+)
 
 # Autogenerate the `config.h` file
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/serene/config.h.in include/serene/config.h)
@@ -118,8 +86,7 @@ target_compile_options(serene
   $<$<CONFIG:RELEASE>:-fmerge-all-constants>
 )
 
-target_link_options(serene
-  PRIVATE
+target_link_options(serene PRIVATE
   $<$<NOT:$<BOOL:${SERENE_DISABLE_LIBCXX}>>:-stdlib=libc++>
   $<$<NOT:$<BOOL:${SERENE_DISABLE_LIBCXX}>>:-lc++abi>
   $<$<NOT:$<BOOL:${SERENE_DISABLE_COMPILER_RT}>>:--rtlib=compiler-rt>
@@ -132,6 +99,7 @@ target_link_options(serene
   # Do not link against shared libraries
   --static
 )
+
 
 if(SERENE_ENABLE_BUILDID)
   target_link_options(serene -Wl,--build-id)
