@@ -1,0 +1,12 @@
+#what-i-cannot-create-i-do-not-understand {
+    color: white;
+    font-weight: 700;
+    margin-bottom: -20px;
+}
+
+.md-typeset .md-annotation__index > ::before {
+  content: attr(data-md-annotation-id);
+}
+.md-typeset :focus-within > .md-annotation__index > ::before {
+  transform: none;
+}
