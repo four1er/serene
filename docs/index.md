@@ -4,7 +4,6 @@ hide:
   - toc
 title: Home
 ---
-
 # “What I cannot create, I do not understand”
 -- Richard Feynman
 
