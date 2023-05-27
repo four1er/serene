@@ -1,5 +1,11 @@
-#what-i-cannot-create-i-do-not-understand {
+[data-md-color-scheme=slate] #what-i-cannot-create-i-do-not-understand {
     color: white;
+    font-weight: 700;
+    margin-bottom: -20px;
+}
+
+[data-md-color-scheme=default] #what-i-cannot-create-i-do-not-understand {
+    color: #2f2f2f;
     font-weight: 700;
     margin-bottom: -20px;
 }

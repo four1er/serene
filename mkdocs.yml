@@ -4,7 +4,7 @@ site_author: lxsameer
 repo_url: https://devheroes.codes/serene/serene
 repo_name: Serene
 copyright: Copyright &copy; 2019 - 2023 Sameer Rahmani
-edit_uri: edit/master/docs/
+edit_uri: _edit/master/docs/pages/
 
 docs_dir: ./docs/pages
 site_dir: ./build/docs
