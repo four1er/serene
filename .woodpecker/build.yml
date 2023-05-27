@@ -39,7 +39,7 @@ pipeline:
       matrix_user:
         from_secret: matrix_user
 
-      matrix_msg: "[${CI_REPO}] Job #${CI_BUILD_NUMBER} <b>failed</b> for branch <b>${CI_COMMIT_BRANCH}</b>. ${CI_BUILD_LINK}"
+      matrix_msg: "[${CI_REPO}][Build] Job #${CI_BUILD_NUMBER} <b>failed</b> for branch <b>${CI_COMMIT_BRANCH}</b>. ${CI_BUILD_LINK}"
     secrets: [ matrix_room, matrix_token, matrix_user ]
     when:
       - status: [failure]
@@ -53,7 +53,7 @@ pipeline:
       password:
         from_secret: mailer_password
       to: ${CI_COMMIT_AUTHOR_EMAIL}
-      subject: "[${CI_REPO}] JOB #${CI_BUILD_NUMBER} failed for branch '${CI_COMMIT_BRANCH}'."
+      subject: "[${CI_REPO}][Build] JOB #${CI_BUILD_NUMBER} failed for branch '${CI_COMMIT_BRANCH}'."
       text: |
         BUILD: ${CI_BUILD_LINK}
         COMMIT: ${CI_COMMIT_LINK}

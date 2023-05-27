@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   serene-docs:
-    image: lxsameer/serene-docs
+    image: serenelang/serene-docs
     environment:
       USER_UID: 1100
       USER_GID: 1100
