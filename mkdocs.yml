@@ -9,9 +9,10 @@ edit_uri: _edit/master/docs/pages/
 docs_dir: ./docs/pages
 site_dir: ./build/docs
 
-# nav:
-#   - Home: 'index.md'
-#   - Resources: 'resources.md'
+nav:
+  - Home: 'index.md'
+  - Getting Started: 'getting_started.md'
+  - Resources: 'resources.md'
 
 theme:
   name: material
