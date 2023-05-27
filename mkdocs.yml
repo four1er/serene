@@ -6,12 +6,17 @@ repo_name: Serene
 copyright: Copyright &copy; 2019 - 2023 Sameer Rahmani
 edit_uri: edit/master/docs/
 
+docs_dir: ./docs/pages
 site_dir: ./build/docs
+
+# nav:
+#   - Home: 'index.md'
+#   - Resources: 'resources.md'
 
 theme:
   name: material
-  logo: /imgs/serene.png
-  favicon: /imgs/serene.png
+  logo: /images/serene.png
+  favicon: /images/serene.png
   icon:
     repo: fontawesome/brands/git-alt
     edit: material/pencil

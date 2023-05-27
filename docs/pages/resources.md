@@ -35,7 +35,7 @@ title: Resources
 ## Concurrency
 - [Scheduling In Go (Series)](https://www.ardanlabs.com/blog/2018/08/scheduling-in-go-part1.html)
 
-## Garbage collection                                                   :GC:
+## Garbage collection
 - [GC on V8](https://v8.dev/blog/high-performance-cpp-gc)
 - [Perceus: Garbage Free Reference Counting with Reuse](https://www.microsoft.com/en-us/research/uploads/prod/2020/11/perceus-tr-v1.pdf)
 - [Boehm GC](https://www.hboehm.info/gc/)
