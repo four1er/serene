@@ -1,4 +1,5 @@
 # Serene lang
+[![Please don't upload to GitHub](https://nogithub.codeberg.page/badge.svg)](https://nogithub.codeberg.page)
 [![status-badge](https://ci.devheroes.codes/api/badges/Serene/serene/status.svg)](https://ci.devheroes.codes/Serene/serene)
 
 Serene is a modern typed lisp. It's not done yet, and it's heavily under development. Don't
