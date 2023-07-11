@@ -88,6 +88,10 @@ title: Resources
 - [Programming Language Foundations in Agda](https://plfa.github.io/)<br/>
   This book is an introduction to programming language theory using the proof assistant Agda.
 
+### Curry-Howard correspondence
+- [The formulae-as-types notion of construction](https://www.dcc.fc.up.pt/~acm/howard2.pdf)
+- [Propositions as Types](https://www.youtube.com/watch?v=IOiZatlZtGU)
+
 ### Type Theory
 - [Homotopy Type Theory](https://www.cs.cmu.edu/~rwh/courses/hott/)
 - [No, dynamic type systems are not inherently more open](https://lexi-lambda.github.io/blog/2020/01/19/no-dynamic-type-systems-are-not-inherently-more-open/)
