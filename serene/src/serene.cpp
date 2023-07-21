@@ -16,14 +16,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "serene/commands.h"
-#include "serene/config.h"
+#include "serene/config.h" // for SERENE_VERSION
 
-#include <llvm/Support/CommandLine.h>
-#include <llvm/Support/FormatVariadic.h>
+#include "commands/commands.h" // for cc, run
+#include <__fwd/string.h>      // for string
 
-#include <cstring>
-#include <string>
+#include <llvm/ADT/StringRef.h>                 // for StringRef
+#include <llvm/Support/CommandLine.h>           // for SubCommand, ParseCom...
+#include <llvm/Support/FormatVariadic.h>        // for formatv, formatv_object
+#include <llvm/Support/FormatVariadicDetails.h> // for provider_format_adapter
+
+#include <cstring> // for strcmp
+#include <string>  // for basic_string
+#include <tuple>   // for tuple
 
 namespace cl = llvm::cl;
 

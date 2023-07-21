@@ -38,6 +38,7 @@ endif()
 target_include_directories(serene
   PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/include
+  ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 target_include_directories(serene SYSTEM PUBLIC

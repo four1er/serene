@@ -18,4 +18,6 @@ target_sources(serene PRIVATE
   serene.cpp
 
   commands/commands.cpp
+  jit/jit.cpp
+  context.cpp
 )

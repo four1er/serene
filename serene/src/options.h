@@ -16,15 +16,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <commands/commands.h>
+#ifndef OPTIONS_H
+#define OPTIONS_H
 
-#include <stdio.h>
+namespace serene {
+/// Options describes the compiler options that can be passed to the
+/// compiler via command line. Anything that user should be able to
+/// tweak about the compiler has to end up here regardless of the
+/// different subsystem that might use it.
+struct Options {
 
-namespace serene::commands {
-int cc(int argc, char **argv) {
-  printf(">> %d, %s\n", argc, argv[0]);
-  return 0;
-}
+  /// Whether to use colors for the output or not
+  bool withColors = true;
 
-int run() { return 0; }
-} // namespace serene::commands
+  // JIT related flags
+  bool JITenableObjectCache              = true;
+  bool JITenableGDBNotificationListener  = true;
+  bool JITenablePerfNotificationListener = true;
+  bool JITLazy                           = false;
+};
+
+} // namespace serene
+#endif
