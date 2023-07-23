@@ -20,6 +20,21 @@
 #define OPTIONS_H
 
 namespace serene {
+/// This enum describes the different operational phases for the compiler
+/// in order. Anything below `NoOptimization` is considered only for debugging
+enum class CompilationPhase {
+  Parse,
+  Analysis,
+  SLIR,
+  MLIR, // Lowered slir to other dialects
+  LIR,  // Lowered to the llvm ir dialect
+  IR,   // Lowered to the LLVMIR itself
+  NoOptimization,
+  O1,
+  O2,
+  O3,
+};
+
 /// Options describes the compiler options that can be passed to the
 /// compiler via command line. Anything that user should be able to
 /// tweak about the compiler has to end up here regardless of the
@@ -34,6 +49,8 @@ struct Options {
   bool JITenableGDBNotificationListener  = true;
   bool JITenablePerfNotificationListener = true;
   bool JITLazy                           = false;
+
+  CompilationPhase compilationPhase = CompilationPhase::NoOptimization;
 };
 
 } // namespace serene

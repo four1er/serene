@@ -59,8 +59,18 @@ namespace serene {
 struct Options;
 } // namespace serene
 
+#define MAIN_PROCESS_JD_NAME "*main*"
 #define HALLEY_LOG(...) \
   DEBUG_WITH_TYPE("JIT", llvm::dbgs() << "[JIT]: " << __VA_ARGS__ << "\n");
+
+/// A simple macro that we need to use to call those member functions that are
+/// shared between LLJIT and LLLAZYJIT. This macro supposed to be used
+/// only within the JIT class itself. The first argument is the return type
+/// of the member function and the second arg is the member function call.
+/// The whole point of this macro is to unwrap the variant type and call
+/// the shared member function on the unwraped value.
+#define WITH_ENGINE(retType, fnCall) \
+  std::visit([](auto &e) -> retType { return e->fnCall; }, engine)
 
 namespace orc = llvm::orc;
 
@@ -91,7 +101,7 @@ private:
 };
 
 class JIT {
-  const bool isLazy;
+  std::unique_ptr<const Options> options;
 
   std::variant<std::unique_ptr<orc::LLJIT>, std::unique_ptr<orc::LLLazyJIT>>
       engine;
@@ -102,6 +112,8 @@ class JIT {
   llvm::JITEventListener *perfListener;
 
   llvm::orc::JITTargetMachineBuilder jtmb;
+
+  std::vector<const char *> loadPaths;
 
   // We keep the jibDylibs for each name space in a mapping from the ns
   // name to a vector of jitdylibs, the last element is always the newest
@@ -115,9 +127,30 @@ class JIT {
   void pushJITDylib(const llvm::StringRef &nsName, llvm::orc::JITDylib *l);
   size_t getNumberOfJITDylibs(const llvm::StringRef &nsName);
 
+  llvm::Error createCurrentProcessJD();
+
 public:
-  JIT(llvm::orc::JITTargetMachineBuilder &&jtmb, Options &opts);
-  static MaybeJIT make(llvm::orc::JITTargetMachineBuilder &&jtmb);
+  // We will use this triple to generate code that will endup in the binary
+  // for the target platform. If we're not cross compiling, `targetTriple`
+  // will be the same as `hostTriple`.
+  const llvm::Triple targetTriple;
+
+  // This triple will be used in code generation for the host platform in
+  // complie time. For example any function that will be called during
+  // the compile time has to run on the host. So we need to generate
+  // appropriate code for the host. If the same function has to be part
+  // of the runtime, then we use `targetTriple` again to generate the code
+  // for the target platform. So, we might end up with two version of the
+  // same function
+  const llvm::Triple hostTriple;
+
+  JIT(llvm::orc::JITTargetMachineBuilder &&jtmb, std::unique_ptr<Options> opts);
+  static MaybeJIT make(llvm::orc::JITTargetMachineBuilder &&jtmb,
+                       std::unique_ptr<Options> opts);
+
+  // Return an integer indicating the level of optimization that is currently
+  // set. 0 == No optimizaion -> it includes compling to IR and AST
+  int getOptimizatioLevel() const;
 
   /// Return a pointer to the most registered JITDylib of the given \p ns
   ////name
@@ -137,6 +170,11 @@ public:
   llvm::Error loadModule(const llvm::StringRef &nsName,
                          const llvm::StringRef &file);
   void dumpToObjectFile(const llvm::StringRef &filename);
+
+  /// Setup the load path for namespace lookups
+  void setLoadPaths(std::vector<const char *> &dirs) { loadPaths.swap(dirs); };
+  /// Return the load paths for namespaces
+  llvm::ArrayRef<const char *> getLoadPaths() { return loadPaths; };
 };
 
 MaybeJIT makeJIT();

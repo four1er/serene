@@ -16,21 +16,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "jit/jit.h"
-
-#include "options.h"    // for Options
+#include <jit/jit.h>
 #include <system_error> // for error_code
 
 #include <llvm/ADT/StringMapEntry.h>               // for StringMapEntry
 #include <llvm/ADT/iterator.h>                     // for iterator_facade_base
 #include <llvm/ExecutionEngine/JITEventListener.h> // for JITEventListener
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>        // IWYU pragma: keep
-#include <llvm/IR/Module.h>                        // for Module
-#include <llvm/Support/FileSystem.h>               // for OpenFlags
-#include <llvm/Support/ToolOutputFile.h>           // for ToolOutputFile
+#include <llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h>
+#include <llvm/ExecutionEngine/SectionMemoryManager.h>
+#include <llvm/IR/Module.h>              // for Module
+#include <llvm/Support/FileSystem.h>     // for OpenFlags
+#include <llvm/Support/ToolOutputFile.h> // for ToolOutputFile
 
-#include <assert.h> // for assert
-#include <string>   // for operator+, char_t...
+#include <assert.h>  // for assert
+#include <options.h> // for Options
+#include <string>    // for operator+, char_t...
 
 namespace serene::jit {
 
@@ -113,15 +114,168 @@ size_t JIT::getNumberOfJITDylibs(const llvm::StringRef &nsName) {
   return jitDylibs[nsName].size();
 };
 
-JIT::JIT(llvm::orc::JITTargetMachineBuilder &&jtmb, Options &opts)
-    : isLazy(opts.JITLazy),
-      cache(opts.JITenableObjectCache ? new ObjectCache() : nullptr),
-      gdbListener(opts.JITenableGDBNotificationListener
+JIT::JIT(llvm::orc::JITTargetMachineBuilder &&jtmb,
+         std::unique_ptr<Options> opts)
+    :
+
+      options(std::move(opts)),
+      cache(options->JITenableObjectCache ? new ObjectCache() : nullptr),
+      gdbListener(options->JITenableGDBNotificationListener
                       ? llvm::JITEventListener::createGDBRegistrationListener()
                       : nullptr),
-      perfListener(opts.JITenablePerfNotificationListener
+      perfListener(options->JITenablePerfNotificationListener
                        ? llvm::JITEventListener::createPerfJITEventListener()
                        : nullptr),
       jtmb(jtmb){};
 
+void JIT::dumpToObjectFile(const llvm::StringRef &filename) {
+  cache->dumpToObjectFile(filename);
+};
+
+int JIT::getOptimizatioLevel() const {
+  if (options->compilationPhase <= CompilationPhase::NoOptimization) {
+    return 0;
+  }
+
+  if (options->compilationPhase == CompilationPhase::O1) {
+    return 1;
+  }
+  if (options->compilationPhase == CompilationPhase::O2) {
+    return 2;
+  }
+  return 3;
+}
+
+llvm::Error JIT::createCurrentProcessJD() {
+
+  auto &es           = WITH_ENGINE(auto &, getExecutionSession());
+  auto *processJDPtr = es.getJITDylibByName(MAIN_PROCESS_JD_NAME);
+
+  if (processJDPtr != nullptr) {
+    // We already created the JITDylib for the current process
+    return llvm::Error::success();
+  }
+
+  auto processJD = es.createJITDylib(MAIN_PROCESS_JD_NAME);
+
+  if (!processJD) {
+    return processJD.takeError();
+  }
+
+  auto generator =
+      llvm::orc::DynamicLibrarySearchGenerator::GetForCurrentProcess(
+          WITH_ENGINE(const auto &, getDataLayout()).getGlobalPrefix());
+
+  if (!generator) {
+    return generator.takeError();
+  }
+
+  processJD->addGenerator(std::move(*generator));
+  return llvm::Error::success();
+};
+
+MaybeJIT JIT::make(llvm::orc::JITTargetMachineBuilder &&jtmb,
+                   std::unique_ptr<Options> opts) {
+  auto dl = jtmb.getDefaultDataLayoutForTarget();
+  if (!dl) {
+    return dl.takeError();
+  }
+
+  auto jitEngine = std::make_unique<JIT>(std::move(jtmb), std::move(opts));
+  //
+  // What might go wrong?
+  // in a repl env when we have to create new modules on top of each other
+  // having two different contex might be a problem, but i think since we
+  // use the first context to generate the IR and the second one to just
+  // run it.
+  std::unique_ptr<llvm::LLVMContext> ctx(new llvm::LLVMContext);
+
+  // Callback to create the object layer with symbol resolution to current
+  // process and dynamically linked libraries.
+  auto objectLinkingLayerCreator = [&](llvm::orc::ExecutionSession &session,
+                                       const llvm::Triple &tt) {
+    (void)tt;
+
+    auto objectLayer =
+        std::make_unique<llvm::orc::RTDyldObjectLinkingLayer>(session, []() {
+          return std::make_unique<llvm::SectionMemoryManager>();
+        });
+
+    // Register JIT event listeners if they are enabled.
+    if (jitEngine->gdbListener != nullptr) {
+      objectLayer->registerJITEventListener(*jitEngine->gdbListener);
+    }
+    if (jitEngine->perfListener != nullptr) {
+      objectLayer->registerJITEventListener(*jitEngine->perfListener);
+    }
+
+    // COFF format binaries (Windows) need special handling to deal with
+    // exported symbol visibility.
+    // cf llvm/lib/ExecutionEngine/Orc/LLJIT.cpp
+    // LLJIT::createObjectLinkingLayer
+    if (jitEngine->hostTriple.isOSBinFormatCOFF()) {
+      objectLayer->setOverrideObjectFlagsWithResponsibilityFlags(true);
+      objectLayer->setAutoClaimResponsibilityForObjectSymbols(true);
+    }
+
+    return objectLayer;
+  };
+
+  // Callback to inspect the cache and recompile on demand.
+  auto compileFunctionCreator = [&](llvm::orc::JITTargetMachineBuilder JTMB)
+      -> llvm::Expected<
+          std::unique_ptr<llvm::orc::IRCompileLayer::IRCompiler>> {
+    llvm::CodeGenOpt::Level jitCodeGenOptLevel =
+        static_cast<llvm::CodeGenOpt::Level>(jitEngine->getOptimizatioLevel());
+
+    JTMB.setCodeGenOptLevel(jitCodeGenOptLevel);
+
+    auto targetMachine = JTMB.createTargetMachine();
+    if (!targetMachine) {
+      return targetMachine.takeError();
+    }
+
+    return std::make_unique<llvm::orc::TMOwningSimpleCompiler>(
+        std::move(*targetMachine), jitEngine->cache.get());
+  };
+
+  auto compileNotifier = [&](llvm::orc::MaterializationResponsibility &r,
+                             llvm::orc::ThreadSafeModule tsm) {
+    auto syms = r.getRequestedSymbols();
+    tsm.withModuleDo([&](llvm::Module &m) {
+      HALLEY_LOG("Compiled " << syms
+                             << " for the module: " << m.getModuleIdentifier());
+    });
+  };
+
+  if (jitEngine->options->JITLazy) {
+    // Setup a LLLazyJIT instance to the times that latency is important
+    // for example in a REPL. This way
+    auto jit =
+        cantFail(llvm::orc::LLLazyJITBuilder()
+                     .setCompileFunctionCreator(compileFunctionCreator)
+                     .setObjectLinkingLayerCreator(objectLinkingLayerCreator)
+                     .create());
+    jit->getIRCompileLayer().setNotifyCompiled(compileNotifier);
+    jitEngine->engine = std::move(jit);
+
+  } else {
+    // Setup a LLJIT instance for the times that performance is important
+    // and we want to compile everything as soon as possible. For instance
+    // when we run the JIT in the compiler
+    auto jit =
+        cantFail(llvm::orc::LLJITBuilder()
+                     .setCompileFunctionCreator(compileFunctionCreator)
+                     .setObjectLinkingLayerCreator(objectLinkingLayerCreator)
+                     .create());
+    jit->getIRCompileLayer().setNotifyCompiled(compileNotifier);
+    jitEngine->engine = std::move(jit);
+  }
+
+  if (auto err = jitEngine->createCurrentProcessJD()) {
+    return err;
+  }
+
+  return MaybeJIT(std::move(jitEngine));
+};
 } // namespace serene::jit
