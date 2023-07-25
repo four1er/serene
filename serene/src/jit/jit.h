@@ -60,7 +60,7 @@ class LLLazyJIT;
 } // namespace llvm::orc
 
 #define MAIN_PROCESS_JD_NAME "*main*"
-#define HALLEY_LOG(...) \
+#define JIT_LOG(...) \
   DEBUG_WITH_TYPE("JIT", llvm::dbgs() << "[JIT]: " << __VA_ARGS__ << "\n");
 
 /// A simple macro that we need to use to call those member functions that are

@@ -64,12 +64,12 @@ ObjectCache::getObject(const llvm::Module *m) {
   auto i = cachedObjects.find(m->getModuleIdentifier());
 
   if (i == cachedObjects.end()) {
-    HALLEY_LOG("No object for " + m->getModuleIdentifier() +
-               " in cache. Compiling.");
+    JIT_LOG("No object for " + m->getModuleIdentifier() +
+            " in cache. Compiling.");
     return nullptr;
   }
 
-  HALLEY_LOG("Object for " + m->getModuleIdentifier() + " loaded from cache.");
+  JIT_LOG("Object for " + m->getModuleIdentifier() + " loaded from cache.");
   return llvm::MemoryBuffer::getMemBuffer(i->second->getMemBufferRef());
 }
 
@@ -257,8 +257,8 @@ MaybeJIT JIT::make(llvm::orc::JITTargetMachineBuilder &&jtmb,
                              llvm::orc::ThreadSafeModule tsm) {
     auto syms = r.getRequestedSymbols();
     tsm.withModuleDo([&](llvm::Module &m) {
-      HALLEY_LOG("Compiled " << syms
-                             << " for the module: " << m.getModuleIdentifier());
+      JIT_LOG("Compiled " << syms
+                          << " for the module: " << m.getModuleIdentifier());
     });
   };
 
