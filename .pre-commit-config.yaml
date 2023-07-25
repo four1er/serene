@@ -18,13 +18,6 @@ repos:
     - id: trailing-whitespace
     - id: mixed-line-ending
 
-  # - repo: local
-  #   hooks:
-  #   - id: include-fixer
-  #     name: Fixing 'serene' includes
-  #     language: script
-  #     entry: ./scripts/include-fixer.sh
-  #     files: ".*.(h|cpp)"
   - repo: local
     hooks:
     - id: include-fixer py
