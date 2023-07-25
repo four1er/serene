@@ -16,7 +16,7 @@ AlignEscapedNewlines: Left
 AlwaysBreakTemplateDeclarations: Yes
 IncludeBlocks: Regroup
 IncludeCategories:
-  - Regex:           '^"(serene)/'
+  - Regex:           '^"'
     Priority:        1
     SortPriority:    1
     CaseSensitive:   true

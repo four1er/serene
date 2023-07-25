@@ -16,9 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "serene/config.h" // for SERENE_VERSION
-
 #include "commands/commands.h" // for cc, run
+#include "serene/config.h"     // for SERENE_VERSION
+                               //
 #include <__fwd/string.h>      // for string
 
 #include <llvm/ADT/StringRef.h>                 // for StringRef

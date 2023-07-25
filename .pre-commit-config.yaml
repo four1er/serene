@@ -18,12 +18,19 @@ repos:
     - id: trailing-whitespace
     - id: mixed-line-ending
 
+  # - repo: local
+  #   hooks:
+  #   - id: include-fixer
+  #     name: Fixing 'serene' includes
+  #     language: script
+  #     entry: ./scripts/include-fixer.sh
+  #     files: ".*.(h|cpp)"
   - repo: local
     hooks:
-    - id: include-fixer
-      name: Fixing 'serene' includes
-      language: script
-      entry: ./scripts/include-fixer.sh
+    - id: include-fixer py
+      name: Fixing local includes
+      language: python
+      entry: ./scripts/include-fixer.py
       files: ".*.(h|cpp)"
 
   - repo: https://github.com/pocc/pre-commit-hooks

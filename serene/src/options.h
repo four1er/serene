@@ -19,6 +19,8 @@
 #ifndef OPTIONS_H
 #define OPTIONS_H
 
+#include <llvm/TargetParser/Triple.h> // for Triple
+
 namespace serene {
 /// This enum describes the different operational phases for the compiler
 /// in order. Anything below `NoOptimization` is considered only for debugging
@@ -49,6 +51,20 @@ struct Options {
   bool JITenableGDBNotificationListener  = true;
   bool JITenablePerfNotificationListener = true;
   bool JITLazy                           = false;
+
+  // We will use this triple to generate code that will endup in the binary
+  // for the target platform. If we're not cross compiling, `targetTriple`
+  // will be the same as `hostTriple`.
+  const llvm::Triple targetTriple;
+
+  // This triple will be used in code generation for the host platform in
+  // complie time. For example any function that will be called during
+  // the compile time has to run on the host. So we need to generate
+  // appropriate code for the host. If the same function has to be part
+  // of the runtime, then we use `targetTriple` again to generate the code
+  // for the target platform. So, we might end up with two version of the
+  // same function
+  const llvm::Triple hostTriple;
 
   CompilationPhase compilationPhase = CompilationPhase::NoOptimization;
 };

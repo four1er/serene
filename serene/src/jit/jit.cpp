@@ -16,22 +16,36 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <jit/jit.h>
-#include <system_error> // for error_code
+#include "jit/jit.h"
 
-#include <llvm/ADT/StringMapEntry.h>               // for StringMapEntry
-#include <llvm/ADT/iterator.h>                     // for iterator_facade_base
-#include <llvm/ExecutionEngine/JITEventListener.h> // for JITEventListener
-#include <llvm/ExecutionEngine/Orc/LLJIT.h>        // IWYU pragma: keep
+#include "options.h" // for Options
+
+#include <__type_traits/remove_reference.h> // for remov...
+#include <__utility/move.h>                 // for move
+#include <system_error>                     // for error_code
+
+#include <llvm/ADT/StringMapEntry.h>                 // for StringMapEntry
+#include <llvm/ADT/iterator.h>                       // for iterator_facade_base
+#include <llvm/ExecutionEngine/JITEventListener.h>   // for JITEventListener
+#include <llvm/ExecutionEngine/Orc/CompileUtils.h>   // for TMOwn...
+#include <llvm/ExecutionEngine/Orc/Core.h>           // for JITDy...
+#include <llvm/ExecutionEngine/Orc/DebugUtils.h>     // for opera...
+#include <llvm/ExecutionEngine/Orc/ExecutionUtils.h> // for Dynam...
+#include <llvm/ExecutionEngine/Orc/IRCompileLayer.h> // for IRCom...
+#include <llvm/ExecutionEngine/Orc/LLJIT.h>          // IWYU pragma: keep
+#include <llvm/ExecutionEngine/Orc/Layer.h>          // for Objec...
 #include <llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h>
+#include <llvm/ExecutionEngine/Orc/ThreadSafeModule.h> // for Threa...
 #include <llvm/ExecutionEngine/SectionMemoryManager.h>
+#include <llvm/IR/DataLayout.h>          // for DataL...
+#include <llvm/IR/LLVMContext.h>         // for LLVMC...
 #include <llvm/IR/Module.h>              // for Module
 #include <llvm/Support/FileSystem.h>     // for OpenFlags
 #include <llvm/Support/ToolOutputFile.h> // for ToolOutputFile
+#include <llvm/TargetParser/Triple.h>    // for Triple
 
-#include <assert.h>  // for assert
-#include <options.h> // for Options
-#include <string>    // for operator+, char_t...
+#include <assert.h> // for assert
+#include <string>   // for operator+, char_t...
 
 namespace serene::jit {
 
@@ -213,7 +227,7 @@ MaybeJIT JIT::make(llvm::orc::JITTargetMachineBuilder &&jtmb,
     // exported symbol visibility.
     // cf llvm/lib/ExecutionEngine/Orc/LLJIT.cpp
     // LLJIT::createObjectLinkingLayer
-    if (jitEngine->hostTriple.isOSBinFormatCOFF()) {
+    if (jitEngine->options->hostTriple.isOSBinFormatCOFF()) {
       objectLayer->setOverrideObjectFlagsWithResponsibilityFlags(true);
       objectLayer->setAutoClaimResponsibilityForObjectSymbols(true);
     }
@@ -277,5 +291,16 @@ MaybeJIT JIT::make(llvm::orc::JITTargetMachineBuilder &&jtmb,
   }
 
   return MaybeJIT(std::move(jitEngine));
+};
+
+MaybeJIT makeJIT(std::unique_ptr<Options> opts) {
+  llvm::orc::JITTargetMachineBuilder jtmb(opts->hostTriple);
+  auto maybeJIT = JIT::make(std::move(jtmb), std::move(opts));
+
+  if (!maybeJIT) {
+    return maybeJIT.takeError();
+  }
+
+  return maybeJIT;
 };
 } // namespace serene::jit
