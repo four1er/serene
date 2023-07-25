@@ -55,6 +55,7 @@ title: Resources
 - [Stack frame layout on x86-64](https://eli.thegreenplace.net/2011/09/06/stack-frame-layout-on-x86-64)
 - [Pointers Are Complicated](https://www.ralfj.de/blog/2020/12/14/provenance.html)
 - [Pointers Are Complicated III, or: Pointer-integer casts exposed](https://www.ralfj.de/blog/2022/04/11/provenance-exposed.html)
+- [A compiler writting journal](https://github.com/DoctorWkt/acwj)
 
 ## Linker
 - [20 part linker essay](https://lwn.net/Articles/276782/)
@@ -73,7 +74,7 @@ title: Resources
 - Scheme
   * [Chicken Scheme - Easy-to-use compiler and interpreter, with lots of libraries](https://call-cc.org)
   * [Stalin - Brutally optimizing Scheme compiler, with lots of optimization flags](https://github.com/barak/stalin)
-
+* [Crafting Interpreters](https://craftinginterpreters.com/contents.html)
 
 ## Emacs mode
 - [Adding A New Language to Emacs](https://www.wilfred.me.uk/blog/2015/03/19/adding-a-new-language-to-emacs/)
