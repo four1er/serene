@@ -63,15 +63,6 @@ class LLLazyJIT;
 #define JIT_LOG(...) \
   DEBUG_WITH_TYPE("JIT", llvm::dbgs() << "[JIT]: " << __VA_ARGS__ << "\n");
 
-/// A simple macro that we need to use to call those member functions that are
-/// shared between LLJIT and LLLAZYJIT. This macro supposed to be used
-/// only within the JIT class itself. The first argument is the return type
-/// of the member function and the second arg is the member function call.
-/// The whole point of this macro is to unwrap the variant type and call
-/// the shared member function on the unwraped value.
-#define WITH_ENGINE(retType, fnCall) \
-  std::visit([](auto &e) -> retType { return e->fnCall; }, engine)
-
 namespace orc = llvm::orc;
 
 namespace serene::jit {
@@ -103,8 +94,7 @@ private:
 class JIT {
   std::unique_ptr<const Options> options;
 
-  std::variant<std::unique_ptr<orc::LLJIT>, std::unique_ptr<orc::LLLazyJIT>>
-      engine;
+  std::unique_ptr<orc::LLJIT> engine;
   std::unique_ptr<ObjectCache> cache;
 
   llvm::JITEventListener *gdbListener;

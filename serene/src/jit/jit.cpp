@@ -162,7 +162,7 @@ int JIT::getOptimizatioLevel() const {
 
 llvm::Error JIT::createCurrentProcessJD() {
 
-  auto &es           = WITH_ENGINE(auto &, getExecutionSession());
+  auto &es           = engine->getExecutionSession();
   auto *processJDPtr = es.getJITDylibByName(MAIN_PROCESS_JD_NAME);
 
   if (processJDPtr != nullptr) {
@@ -178,7 +178,7 @@ llvm::Error JIT::createCurrentProcessJD() {
 
   auto generator =
       llvm::orc::DynamicLibrarySearchGenerator::GetForCurrentProcess(
-          WITH_ENGINE(const auto &, getDataLayout()).getGlobalPrefix());
+          engine->getDataLayout().getGlobalPrefix());
 
   if (!generator) {
     return generator.takeError();
