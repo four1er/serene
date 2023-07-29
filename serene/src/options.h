@@ -43,6 +43,8 @@ enum class CompilationPhase {
 /// different subsystem that might use it.
 struct Options {
 
+  bool verbose = false;
+
   /// Whether to use colors for the output or not
   bool withColors = true;
 

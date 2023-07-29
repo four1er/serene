@@ -31,7 +31,7 @@ cmake_policy(SET CMP0116 OLD)
 # =============================================================================
 # User Options
 # =============================================================================
-option(CPP_20_SUPPORT "C++20 Support" OFF)
+option(CPP_20_SUPPORT "C++20 Support" ON)
 option(SERENE_BUILD_TESTING "Enable tests" OFF)
 option(SERENE_ENABLE_BUILDID "Enable build id." OFF)
 option(SERENE_ENABLE_THINLTO "Enable ThisLTO." ON)
