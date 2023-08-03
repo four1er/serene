@@ -1,11 +1,3 @@
-clone:
-  git:
-    image: woodpeckerci/plugin-git
-    settings:
-      depth: 1
-      lfs: false
-      recursive: false
-
 pipeline:
   build:
     image: woodpeckerci/plugin-docker-buildx
