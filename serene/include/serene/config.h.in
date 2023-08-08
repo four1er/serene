@@ -24,4 +24,31 @@
 // Should we build the support for MLIR CL OPTIONS?
 #cmakedefine SERENE_WITH_MLIR_CL_OPTION
 
+#ifdef __cplusplus
+enum class TypeID {
+#else
+typedef enum {
+#endif
+  NIL = 0,
+  SYMBOL,
+  TYPE,
+  FN,
+  NUMBER,
+  INT,
+  CSTRING,
+  STRING,
+  KEYWORD,
+  NAMESPACE,
+  LIST,
+  MAP,
+  VECTOR,
+  STRUCT,
+  PROTOCOL,
+  Error,
+}
+#ifndef __cplusplus
+TypeID
+#endif
+;
+
 #endif

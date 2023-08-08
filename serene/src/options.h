@@ -65,7 +65,7 @@ struct Options {
   // appropriate code for the host. If the same function has to be part
   // of the runtime, then we use `targetTriple` again to generate the code
   // for the target platform. So, we might end up with two version of the
-  // same function
+  // same function.
   const llvm::Triple hostTriple;
 
   CompilationPhase compilationPhase = CompilationPhase::NoOptimization;

@@ -119,6 +119,15 @@ class JIT {
 
   llvm::Error createCurrentProcessJD();
 
+  // Anonymous function counter. We need to assing a unique name to each
+  // anonymous function and we use this counter to generate those names
+  std::atomic<uint> fn_counter = 0;
+
+  // Since indexing namespaces by the name would be inefficient, We use
+  // unsigned integer and assign a number to all the namespaces at the
+  // creation time. Namespace IDs have to be unique.
+  std::atomic<uint> ns_counter = 0;
+
 public:
   JIT(llvm::orc::JITTargetMachineBuilder &&jtmb, std::unique_ptr<Options> opts);
   static MaybeJIT make(llvm::orc::JITTargetMachineBuilder &&jtmb,
@@ -151,6 +160,8 @@ public:
   void setLoadPaths(std::vector<const char *> &dirs) { loadPaths.swap(dirs); };
   /// Return the load paths for namespaces
   llvm::ArrayRef<const char *> getLoadPaths() { return loadPaths; };
+
+  const Options &getOptions() const { return *options; };
 };
 
 MaybeJIT makeJIT(std::unique_ptr<Options> opts);

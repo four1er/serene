@@ -51,6 +51,8 @@ option(LLVM_USE_PERF "If the target LLVM build is built with LLVM_USE_PERF" OFF)
 # Only do these if this is the main project, and not if it is included through add_subdirectory
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
   ## Settings =======================
+
+  set(C_STANDARD 17)
   # specify the C++ standard
   if (CPP_20_SUPPORT)
     set(CMAKE_CXX_STANDARD 20)
