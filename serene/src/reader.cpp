@@ -18,7 +18,9 @@
 
 #include "reader.h"
 
-// #include "serene/errors.h"
+#include "errors.h"
+#include "jit/jit.h"
+#include "utils.h"
 // #include "serene/exprs/expression.h"
 // #include "serene/exprs/list.h"
 // #include "serene/exprs/number.h"
@@ -46,7 +48,6 @@
 
 namespace serene {
 
-namespace reader {
 // LocationRange::LocationRange(const LocationRange &loc) {
 //   start = loc.start.clone();
 //   end   = loc.end.clone();
@@ -98,11 +99,11 @@ void decLocation(Location &loc, const char *c) {
   }
 }
 
-Reader::Reader(SereneContext &ctx, llvm::StringRef buffer, llvm::StringRef ns,
+Reader::Reader(jit::JIT &engine, llvm::StringRef buffer, llvm::StringRef ns,
                std::optional<llvm::StringRef> filename)
-    : ctx(ctx), ns(ns), filename(filename), buf(buffer),
+    : engine(engine), ns(ns), filename(filename), buf(buffer),
       currentLocation(Location(ns, filename)) {
-  UNUSED(this->ctx);
+  UNUSED(this->engine);
   READER_LOG("Setting the first char of the buffer");
   currentChar          = buf.begin() - 1;
   currentPos           = 1;
@@ -110,9 +111,9 @@ Reader::Reader(SereneContext &ctx, llvm::StringRef buffer, llvm::StringRef ns,
   currentLocation.col  = 1;
 };
 
-Reader::Reader(SereneContext &ctx, llvm::MemoryBufferRef buffer,
+Reader::Reader(jit::JIT &engine, llvm::MemoryBufferRef buffer,
                llvm::StringRef ns, std::optional<llvm::StringRef> filename)
-    : Reader(ctx, buffer.getBuffer(), ns, filename){};
+    : Reader(engine, buffer.getBuffer(), ns, filename){};
 
 Reader::~Reader() { READER_LOG("Destroying the reader"); }
 
@@ -173,7 +174,8 @@ const char *Reader::nextChar(bool skipWhitespace, unsigned count) {
 };
 
 bool Reader::isEndOfBuffer(const char *c) {
-  return *c == '\0' || currentPos > buf.size() || ((const int)*c == EOF);
+  return *c == '\0' || currentPos > buf.size() ||
+         (static_cast<const int>(*c) == EOF);
 };
 
 Location Reader::getCurrentLocation() { return currentLocation.clone(); };
@@ -208,7 +210,7 @@ bool Reader::isValidForIdentifier(char c) {
 
 /// Reads a number,
 /// \param neg whether to read a negative number or not.
-exprs::MaybeNode Reader::readNumber(bool neg) {
+ast::MaybeNode Reader::readNumber(bool neg) {
   READER_LOG("Reading a number...");
   std::string number(neg ? "-" : "");
   bool floatNum = false;
@@ -220,7 +222,7 @@ exprs::MaybeNode Reader::readNumber(bool neg) {
   LocationRange loc(getCurrentLocation());
 
   if (isdigit(*c) == 0) {
-    return errors::makeError(ctx, errors::InvalidDigitForNumber, loc);
+    return errors::make(errors::Type::InvalidDigitForNumber, loc);
   }
 
   for (;;) {
@@ -231,7 +233,7 @@ exprs::MaybeNode Reader::readNumber(bool neg) {
     if ((isdigit(*c) != 0) || *c == '.') {
       if (*c == '.' && floatNum) {
         loc = LocationRange(getCurrentLocation());
-        return errors::makeError(ctx, errors::TwoFloatPoints, loc);
+        return errors::make(errors::Type::TwoFloatPoints, loc);
       }
 
       if (*c == '.') {
@@ -247,16 +249,16 @@ exprs::MaybeNode Reader::readNumber(bool neg) {
   if (((std::isalpha(*c) != 0) && !empty) || empty) {
     advance();
     loc.start = getCurrentLocation();
-    return errors::makeError(ctx, errors::InvalidDigitForNumber, loc);
+    return errors::make(errors::Type::InvalidDigitForNumber, loc);
   }
 
   loc.end = getCurrentLocation();
-  return exprs::make<exprs::Number>(loc, number, neg, floatNum);
+  return ast::make<ast::Number>(loc, number, neg, floatNum);
 };
 
 /// Reads a symbol. If the symbol looks like a number
 /// If reads it as number
-exprs::MaybeNode Reader::readSymbol() {
+ast::MaybeNode Reader::readSymbol() {
   READER_LOG("Reading a symbol...");
   LocationRange loc;
   const auto *c = nextChar();
@@ -271,7 +273,7 @@ exprs::MaybeNode Reader::readSymbol() {
       msg = "An extra ')' is detected.";
     }
 
-    return errors::makeError(ctx, errors::InvalidCharacterForSymbol, loc, msg);
+    return errors::make(errors::Type::InvalidCharacterForSymbol, loc, msg);
   }
 
   if (*c == '-') {
@@ -307,17 +309,17 @@ exprs::MaybeNode Reader::readSymbol() {
   // TODO: Make sure that `/` is not at the start or at the end of the symbol
 
   loc.end = getCurrentLocation();
-  return exprs::makeSuccessfulNode<exprs::Symbol>(loc, sym, this->ns);
+  return ast::makeSuccessfulNode<ast::Symbol>(loc, sym, this->ns);
 };
 
 /// Reads a list recursively
-exprs::MaybeNode Reader::readList() {
+ast::MaybeNode Reader::readList() {
   READER_LOG("Reading a list...");
 
   const auto *c = nextChar();
   advance();
 
-  auto list = exprs::makeAndCast<exprs::List>(getCurrentLocation());
+  auto list = ast::makeAndCast<ast::List>(getCurrentLocation());
 
   // TODO: Replace the assert with an actual check.
   assert(*c == '(');
@@ -331,8 +333,7 @@ exprs::MaybeNode Reader::readList() {
       advance(true);
       advance();
       list->location.end = getCurrentLocation();
-      return errors::makeError(ctx, errors::EOFWhileScaningAList,
-                               list->location);
+      return errors::make(errors::Type::EOFWhileScaningAList, list->location);
     }
 
     switch (*c) {
@@ -359,13 +360,13 @@ exprs::MaybeNode Reader::readList() {
 };
 
 /// Reads an expression by dispatching to the proper reader function.
-exprs::MaybeNode Reader::readExpr() {
+ast::MaybeNode Reader::readExpr() {
   const auto *c = nextChar(true);
 
   READER_LOG("Read char at `readExpr`: " << *c);
 
   if (isEndOfBuffer(c)) {
-    return exprs::EmptyNode;
+    return ast::EmptyNode;
   }
 
   switch (*c) {
@@ -383,7 +384,7 @@ exprs::MaybeNode Reader::readExpr() {
 /// Reads all the expressions in the reader's buffer as an AST.
 /// Each expression type (from the reader perspective) has a
 /// reader function.
-exprs::MaybeAst Reader::read() {
+ast::MaybeAst Reader::read() {
 
   for (size_t current_pos = 0; current_pos < buf.size();) {
     const auto *c = nextChar(true);
@@ -411,21 +412,21 @@ exprs::MaybeAst Reader::read() {
   return std::move(this->ast);
 };
 
-exprs::MaybeAst read(SereneContext &ctx, const llvm::StringRef input,
-                     llvm::StringRef ns,
-                     std::optional<llvm::StringRef> filename) {
-  reader::Reader r(ctx, input, ns, filename);
+ast::MaybeAst read(jit::JIT &engine, const llvm::StringRef input,
+                   llvm::StringRef ns,
+                   std::optional<llvm::StringRef> filename) {
+  Reader r(engine, input, ns, filename);
   auto ast = r.read();
   return ast;
 }
 
-exprs::MaybeAst read(SereneContext &ctx, const llvm::MemoryBufferRef input,
-                     llvm::StringRef ns,
-                     std::optional<llvm::StringRef> filename) {
-  reader::Reader r(ctx, input, ns, filename);
+ast::MaybeAst read(jit::JIT &engine, const llvm::MemoryBufferRef input,
+                   llvm::StringRef ns,
+                   std::optional<llvm::StringRef> filename) {
+  Reader r(engine, input, ns, filename);
 
   auto ast = r.read();
   return ast;
 }
-} // namespace reader
+
 } // namespace serene

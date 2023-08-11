@@ -104,6 +104,7 @@ bool List::classof(const Expression *e) {
   return e->getType() == TypeID::LIST;
 };
 
+void List::append(Node &n) { elements.push_back(std::move(n)); }
 // ============================================================================
 // String
 // ============================================================================

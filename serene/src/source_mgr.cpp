@@ -16,12 +16,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "serene/source_mgr.h"
+#include "source_mgr.h"
 
-#include "serene/namespace.h"
-#include "serene/reader/location.h"
-#include "serene/reader/reader.h"
-#include "serene/utils.h"
+#include "errors.h"
+#include "jit/jit.h"
+#include "location.h"
+#include "reader.h"
+#include "utils.h"
 
 #include <system_error>
 
@@ -75,8 +76,8 @@ SourceMgr::MemBufPtr SourceMgr::findFileInLoadPath(const std::string &name,
   return nullptr;
 };
 
-MaybeNS SourceMgr::readNamespace(SereneContext &ctx, std::string name,
-                                 reader::LocationRange importLoc) {
+MaybeNS SourceMgr::readNamespace(jit::JIT &engine, std::string name,
+                                 LocationRange importLoc) {
   std::string importedFile;
 
   SMGR_LOG("Attempt to load namespace: " + name);
@@ -84,7 +85,7 @@ MaybeNS SourceMgr::readNamespace(SereneContext &ctx, std::string name,
 
   if (newBufOrErr == nullptr) {
     auto msg = llvm::formatv("Couldn't find namespace '{0}'", name).str();
-    return errors::makeError(ctx, errors::NSLoadError, importLoc, msg);
+    return errors::make(errors::Type::NSLoadError, importLoc, msg);
   }
 
   auto bufferId = AddNewSourceBuffer(std::move(newBufOrErr), importLoc);
@@ -93,7 +94,7 @@ MaybeNS SourceMgr::readNamespace(SereneContext &ctx, std::string name,
 
   if (bufferId == 0) {
     auto msg = llvm::formatv("Couldn't add namespace '{0}'", name).str();
-    return errors::makeError(ctx, errors::NSAddToSMError, importLoc, msg);
+    return errors::make(errors::Type; : NSAddToSMError, importLoc, msg);
   }
 
   // Since we moved the buffer to be added as the source storage we
@@ -101,8 +102,8 @@ MaybeNS SourceMgr::readNamespace(SereneContext &ctx, std::string name,
   const auto *buf = getMemoryBuffer(bufferId);
 
   // Read the content of the buffer by passing it the reader
-  auto maybeAst = reader::read(ctx, buf->getBuffer(), name,
-                               std::optional(llvm::StringRef(importedFile)));
+  auto maybeAst = read(jit, buf->getBuffer(), name,
+                       std::optional(llvm::StringRef(importedFile)));
 
   if (!maybeAst) {
     SMGR_LOG("Couldn't Read namespace: " + name);
@@ -111,7 +112,7 @@ MaybeNS SourceMgr::readNamespace(SereneContext &ctx, std::string name,
 
   // Create the NS and set the AST
   auto ns =
-      ctx.makeNamespace(name, std::optional(llvm::StringRef(importedFile)));
+      engine.makeNamespace(name, std::optional(llvm::StringRef(importedFile)));
 
   if (auto errs = ns->addTree(*maybeAst)) {
     SMGR_LOG("Couldn't set the AST for namespace: " + name);
@@ -122,7 +123,7 @@ MaybeNS SourceMgr::readNamespace(SereneContext &ctx, std::string name,
 };
 
 unsigned SourceMgr::AddNewSourceBuffer(std::unique_ptr<llvm::MemoryBuffer> f,
-                                       reader::LocationRange includeLoc) {
+                                       LocationRange includeLoc) {
   SrcBuffer nb;
   nb.buffer    = std::move(f);
   nb.importLoc = includeLoc;

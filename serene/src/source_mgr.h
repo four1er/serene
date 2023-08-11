@@ -20,6 +20,7 @@
 #define SERENE_SOURCE_MGR_H
 
 #include "location.h"
+#include "namespace.h"
 
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/ADT/StringMap.h>
@@ -38,7 +39,9 @@
                                    << "[SMGR]: " << __VA_ARGS__ << "\n");
 
 namespace serene {
-class SereneContext;
+namespace jit {
+class JIT;
+} // namespace jit
 
 /// This class is quite similar to the `llvm::SourceMgr` in functionality. We
 /// even borrowed some of the code from the original implementation but removed
@@ -181,7 +184,7 @@ public:
   ///
   /// \p importLoc is a location in the source code where the give namespace is
   /// imported.
-  MaybeNS readNamespace(SereneContext &ctx, std::string name,
+  MaybeNS readNamespace(jit::JIT &engine, std::string name,
                         LocationRange importLoc);
 };
 

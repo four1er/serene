@@ -43,10 +43,19 @@
 #include <llvm/ADT/StringRef.h>
 #include <llvm/Support/MemoryBufferRef.h>
 
+#define READER_LOG(...)                  \
+  DEBUG_WITH_TYPE("READER", llvm::dbgs() \
+                                << "[READER]: " << __VA_ARGS__ << "\n");
+
 namespace serene {
+namespace jit {
+class JIT;
+} // namespace jit
+
 /// Base reader class which reads from a string directly.
 class Reader {
 private:
+  jit::JIT &engine;
   llvm::StringRef ns;
   std::optional<llvm::StringRef> filename;
 
@@ -77,36 +86,36 @@ private:
   static bool isValidForIdentifier(char c);
 
   // The property to store the ast tree
-  Ast ast;
+  ast::Ast ast;
 
-  MaybeNode readSymbol();
-  MaybeNode readNumber(bool);
-  MaybeNode readList();
-  MaybeNode readExpr();
+  ast::MaybeNode readSymbol();
+  ast::MaybeNode readNumber(bool);
+  ast::MaybeNode readList();
+  ast::MaybeNode readExpr();
 
   bool isEndOfBuffer(const char *);
 
 public:
-  Reader(llvm::StringRef buf, llvm::StringRef ns,
+  Reader(jit::JIT &engine, llvm::StringRef buf, llvm::StringRef ns,
          std::optional<llvm::StringRef> filename);
-  Reader(llvm::MemoryBufferRef buf, llvm::StringRef ns,
+  Reader(jit::JIT &engine, llvm::MemoryBufferRef buf, llvm::StringRef ns,
          std::optional<llvm::StringRef> filename);
 
   // void setInput(const llvm::StringRef string);
 
   /// Parses the the input and creates a possible AST out of it or errors
   /// otherwise.
-  MaybeAst read();
+  ast::MaybeAst read();
 
   ~Reader();
 };
 
 /// Parses the given `input` string and returns a `Result<ast>`
 /// which may contains an AST or an `llvm::Error`
-MaybeAst read(llvm::StringRef input, llvm::StringRef ns,
-              std::optional<llvm::StringRef> filename);
-MaybeAst read(llvm::MemoryBufferRef input, llvm::StringRef ns,
-              std::optional<llvm::StringRef> filename);
+ast::MaybeAst read(llvm::StringRef input, llvm::StringRef ns,
+                   std::optional<llvm::StringRef> filename);
+ast::MaybeAst read(llvm::MemoryBufferRef input, llvm::StringRef ns,
+                   std::optional<llvm::StringRef> filename);
 
 } // namespace serene
 #endif

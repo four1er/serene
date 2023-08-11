@@ -134,6 +134,7 @@ struct List : public Expression {
   std::string toString() const override;
 
   ~List() = default;
+  void append(Node &n);
 
   static bool classof(const Expression *e);
 };
@@ -221,7 +222,7 @@ Node make(Args &&...args) {
 ///              passed to the constructor of type T.
 /// \return A unique pointer to a value of type T.
 template <typename T, typename... Args>
-std::shared_ptr<T> makeAndCast(Args &&...args) {
+std::unique_ptr<T> makeAndCast(Args &&...args) {
   return std::make_unique<T>(std::forward<Args>(args)...);
 };
 

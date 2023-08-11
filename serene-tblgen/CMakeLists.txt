@@ -14,7 +14,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include_directories(${PROJECT_SOURCE_DIR}/serene-tblgen)
 
 add_executable(serene-tblgen
   serene/errors-backend.cpp
@@ -28,8 +27,10 @@ set(SERENE_TABLEGEN $<TARGET_FILE:serene-tblgen> CACHE
 
 set(SERENE_TABLEGEN_EXE SereneTablegen
   CACHE STRING "Where to find the tbl-srn binary")
+
 set(SERENE_TABLEGEN_TARGET SereneTablegen CACHE
   STRING "Target name for the tbl-srn")
 
 target_link_libraries(serene-tblgen PRIVATE LLVMTableGenGlobalISel ${llvm_libs})
+target_include_directories(${PROJECT_SOURCE_DIR}/serene-tblgen)
 set_target_properties(serene-tblgen PROPERTIES FOLDER "serene-tblgen")
