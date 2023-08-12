@@ -59,6 +59,10 @@ class LLJIT;
 class LLLazyJIT;
 } // namespace llvm::orc
 
+namespace serene {
+class Namespace;
+} // namespace serene
+
 #define MAIN_PROCESS_JD_NAME "*main*"
 #define JIT_LOG(...) \
   DEBUG_WITH_TYPE("JIT", llvm::dbgs() << "[JIT]: " << __VA_ARGS__ << "\n");

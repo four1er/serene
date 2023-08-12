@@ -327,16 +327,16 @@ ast::MaybeNode Reader::readList() {
   bool list_terminated = false;
 
   do {
-    const auto *c = nextChar(true);
+    const auto *ch = nextChar(true);
 
-    if (isEndOfBuffer(c)) {
+    if (isEndOfBuffer(ch)) {
       advance(true);
       advance();
       list->location.end = getCurrentLocation();
       return errors::make(errors::Type::EOFWhileScaningAList, list->location);
     }
 
-    switch (*c) {
+    switch (*ch) {
     case ')':
       advance(true);
       advance();

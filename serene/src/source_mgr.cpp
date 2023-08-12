@@ -94,7 +94,7 @@ MaybeNS SourceMgr::readNamespace(jit::JIT &engine, std::string name,
 
   if (bufferId == 0) {
     auto msg = llvm::formatv("Couldn't add namespace '{0}'", name).str();
-    return errors::make(errors::Type; : NSAddToSMError, importLoc, msg);
+    return errors::make(errors::Type::NSAddToSMError, importLoc, msg);
   }
 
   // Since we moved the buffer to be added as the source storage we
@@ -102,7 +102,7 @@ MaybeNS SourceMgr::readNamespace(jit::JIT &engine, std::string name,
   const auto *buf = getMemoryBuffer(bufferId);
 
   // Read the content of the buffer by passing it the reader
-  auto maybeAst = read(jit, buf->getBuffer(), name,
+  auto maybeAst = read(engine, buf->getBuffer(), name,
                        std::optional(llvm::StringRef(importedFile)));
 
   if (!maybeAst) {
@@ -123,7 +123,7 @@ MaybeNS SourceMgr::readNamespace(jit::JIT &engine, std::string name,
 };
 
 unsigned SourceMgr::AddNewSourceBuffer(std::unique_ptr<llvm::MemoryBuffer> f,
-                                       LocationRange includeLoc) {
+                                       const LocationRange &includeLoc) {
   SrcBuffer nb;
   nb.buffer    = std::move(f);
   nb.importLoc = includeLoc;

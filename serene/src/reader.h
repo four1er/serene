@@ -112,10 +112,10 @@ public:
 
 /// Parses the given `input` string and returns a `Result<ast>`
 /// which may contains an AST or an `llvm::Error`
-ast::MaybeAst read(llvm::StringRef input, llvm::StringRef ns,
+ast::MaybeAst read(jit::JIT &engine, llvm::StringRef input, llvm::StringRef ns,
                    std::optional<llvm::StringRef> filename);
-ast::MaybeAst read(llvm::MemoryBufferRef input, llvm::StringRef ns,
-                   std::optional<llvm::StringRef> filename);
+ast::MaybeAst read(jit::JIT &engine, llvm::MemoryBufferRef input,
+                   llvm::StringRef ns, std::optional<llvm::StringRef> filename);
 
 } // namespace serene
 #endif

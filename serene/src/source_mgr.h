@@ -174,7 +174,7 @@ public:
   /// Add a new source buffer to this source manager. This takes ownership of
   /// the memory buffer.
   unsigned AddNewSourceBuffer(std::unique_ptr<llvm::MemoryBuffer> f,
-                              LocationRange includeLoc);
+                              const LocationRange &includeLoc);
 
   /// Lookup for a file containing the namespace definition of with given
   /// namespace name \p name. In case that the file exists, it returns an
