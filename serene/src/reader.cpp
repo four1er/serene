@@ -99,11 +99,11 @@ void decLocation(Location &loc, const char *c) {
   }
 }
 
-Reader::Reader(jit::JIT &engine, llvm::StringRef buffer, llvm::StringRef ns,
+Reader::Reader(llvm::StringRef buffer, llvm::StringRef ns,
                std::optional<llvm::StringRef> filename)
-    : engine(engine), ns(ns), filename(filename), buf(buffer),
+    : ns(ns), filename(filename), buf(buffer),
       currentLocation(Location(ns, filename)) {
-  UNUSED(this->engine);
+
   READER_LOG("Setting the first char of the buffer");
   currentChar          = buf.begin() - 1;
   currentPos           = 1;
@@ -111,9 +111,9 @@ Reader::Reader(jit::JIT &engine, llvm::StringRef buffer, llvm::StringRef ns,
   currentLocation.col  = 1;
 };
 
-Reader::Reader(jit::JIT &engine, llvm::MemoryBufferRef buffer,
-               llvm::StringRef ns, std::optional<llvm::StringRef> filename)
-    : Reader(engine, buffer.getBuffer(), ns, filename){};
+Reader::Reader(llvm::MemoryBufferRef buffer, llvm::StringRef ns,
+               std::optional<llvm::StringRef> filename)
+    : Reader(buffer.getBuffer(), ns, filename){};
 
 Reader::~Reader() { READER_LOG("Destroying the reader"); }
 
@@ -317,9 +317,10 @@ ast::MaybeNode Reader::readList() {
   READER_LOG("Reading a list...");
 
   const auto *c = nextChar();
+  LocationRange loc(getCurrentLocation());
   advance();
 
-  auto list = ast::makeAndCast<ast::List>(getCurrentLocation());
+  auto list = ast::makeAndCast<ast::List>(loc);
 
   // TODO: Replace the assert with an actual check.
   assert(*c == '(');
@@ -412,18 +413,16 @@ ast::MaybeAst Reader::read() {
   return std::move(this->ast);
 };
 
-ast::MaybeAst read(jit::JIT &engine, const llvm::StringRef input,
-                   llvm::StringRef ns,
+ast::MaybeAst read(const llvm::StringRef input, llvm::StringRef ns,
                    std::optional<llvm::StringRef> filename) {
-  Reader r(engine, input, ns, filename);
+  Reader r(input, ns, filename);
   auto ast = r.read();
   return ast;
 }
 
-ast::MaybeAst read(jit::JIT &engine, const llvm::MemoryBufferRef input,
-                   llvm::StringRef ns,
+ast::MaybeAst read(const llvm::MemoryBufferRef input, llvm::StringRef ns,
                    std::optional<llvm::StringRef> filename) {
-  Reader r(engine, input, ns, filename);
+  Reader r(input, ns, filename);
 
   auto ast = r.read();
   return ast;

@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ERRORS_H
-#define ERRORS_H
+#ifndef SERENE_ERRORS_H
+#define SERENE_ERRORS_H
 
 #include "_errors.h"
 #include "location.h"
@@ -35,7 +35,7 @@ public:
   static char ID;
 
   Type type;
-  LocationRange location;
+  const LocationRange location;
   std::string msg;
 
   void log(llvm::raw_ostream &os) const override { os << msg; }
@@ -46,21 +46,18 @@ public:
     return std::make_error_code(std::errc::io_error);
   }
 
-  Error(Type errtype, LocationRange &loc) : type(errtype), location(loc){};
+  Error(Type errtype, const LocationRange &loc)
+      : type(errtype), location(loc){};
 
-  Error(Type errtype, LocationRange &loc, llvm::StringRef msg)
+  Error(Type errtype, const LocationRange &loc, llvm::StringRef msg)
       : type(errtype), location(loc), msg(msg.str()){};
 
-  LocationRange &where() { return location; };
+  const LocationRange &where() { return location; };
 };
 
-llvm::Error make(Type t, LocationRange &loc, llvm::StringRef msg) {
-  return llvm::make_error<Error>(t, loc, msg);
-}
+llvm::Error make(Type t, const LocationRange &loc, llvm::StringRef msg);
 
-llvm::Error make(Type t, LocationRange &loc) {
-  return llvm::make_error<Error>(t, loc);
-}
+llvm::Error make(Type t, const LocationRange &loc);
 
 }; // namespace serene::errors
 #endif

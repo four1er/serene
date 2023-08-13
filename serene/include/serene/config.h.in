@@ -33,6 +33,7 @@ typedef enum {
   SYMBOL,
   TYPE,
   FN,
+  NS,
   NUMBER,
   INT,
   CSTRING,

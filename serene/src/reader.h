@@ -37,7 +37,7 @@
 #ifndef READER_H
 #define READER_H
 
-#include "ast.h"
+#include "ast/ast.h"
 #include "location.h"
 
 #include <llvm/ADT/StringRef.h>
@@ -55,7 +55,6 @@ class JIT;
 /// Base reader class which reads from a string directly.
 class Reader {
 private:
-  jit::JIT &engine;
   llvm::StringRef ns;
   std::optional<llvm::StringRef> filename;
 
@@ -96,9 +95,9 @@ private:
   bool isEndOfBuffer(const char *);
 
 public:
-  Reader(jit::JIT &engine, llvm::StringRef buf, llvm::StringRef ns,
+  Reader(llvm::StringRef buf, llvm::StringRef ns,
          std::optional<llvm::StringRef> filename);
-  Reader(jit::JIT &engine, llvm::MemoryBufferRef buf, llvm::StringRef ns,
+  Reader(llvm::MemoryBufferRef buf, llvm::StringRef ns,
          std::optional<llvm::StringRef> filename);
 
   // void setInput(const llvm::StringRef string);
@@ -112,10 +111,10 @@ public:
 
 /// Parses the given `input` string and returns a `Result<ast>`
 /// which may contains an AST or an `llvm::Error`
-ast::MaybeAst read(jit::JIT &engine, llvm::StringRef input, llvm::StringRef ns,
+ast::MaybeAst read(llvm::StringRef input, llvm::StringRef ns,
                    std::optional<llvm::StringRef> filename);
-ast::MaybeAst read(jit::JIT &engine, llvm::MemoryBufferRef input,
-                   llvm::StringRef ns, std::optional<llvm::StringRef> filename);
+ast::MaybeAst read(llvm::MemoryBufferRef input, llvm::StringRef ns,
+                   std::optional<llvm::StringRef> filename);
 
 } // namespace serene
 #endif

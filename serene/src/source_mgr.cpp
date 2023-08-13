@@ -76,8 +76,8 @@ SourceMgr::MemBufPtr SourceMgr::findFileInLoadPath(const std::string &name,
   return nullptr;
 };
 
-MaybeNS SourceMgr::readNamespace(jit::JIT &engine, std::string name,
-                                 LocationRange importLoc) {
+ast::MaybeNS SourceMgr::readNamespace(std::string name,
+                                      const LocationRange &importLoc) {
   std::string importedFile;
 
   SMGR_LOG("Attempt to load namespace: " + name);
@@ -102,7 +102,7 @@ MaybeNS SourceMgr::readNamespace(jit::JIT &engine, std::string name,
   const auto *buf = getMemoryBuffer(bufferId);
 
   // Read the content of the buffer by passing it the reader
-  auto maybeAst = read(engine, buf->getBuffer(), name,
+  auto maybeAst = read(buf->getBuffer(), name,
                        std::optional(llvm::StringRef(importedFile)));
 
   if (!maybeAst) {
@@ -111,11 +111,11 @@ MaybeNS SourceMgr::readNamespace(jit::JIT &engine, std::string name,
   }
 
   // Create the NS and set the AST
-  auto ns =
-      engine.makeNamespace(name, std::optional(llvm::StringRef(importedFile)));
+  auto ns = ast::makeAndCast<ast::Namespace>(
+      importLoc, name, std::optional(llvm::StringRef(importedFile)));
 
-  if (auto errs = ns->addTree(*maybeAst)) {
-    SMGR_LOG("Couldn't set the AST for namespace: " + name);
+  if (auto errs = ns->ExpandTree(*maybeAst)) {
+    SMGR_LOG("Couldn't set thre AST for namespace: " + name);
     return errs;
   }
 

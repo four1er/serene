@@ -16,9 +16,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef AST_H
-#define AST_H
+#ifndef AST_AST_H
+#define AST_AST_H
 
+#include "environment.h"
 #include "location.h"
 #include "serene/config.h"
 
@@ -44,7 +45,6 @@ constexpr static auto EmptyNode = nullptr;
 // common interface for the expressions to implement.
 // ============================================================================
 struct Expression {
-
   /// The location range provide information regarding to where in the input
   /// string the current expression is used.
   LocationRange location;
@@ -101,15 +101,13 @@ struct Symbol : public Expression {
 // ============================================================================
 struct Number : public Expression {
   // TODO: [ast] Split the number type into their own types
-  std::variant<long, double> value;
+  std::string value;
   // /TODO
 
   bool isNeg;
   bool isFloat;
 
-  Number(const LocationRange &loc, const long &num);
-  Number(const LocationRange &loc, const unsigned long &num);
-  Number(const LocationRange &loc, const double &num);
+  Number(const LocationRange &loc, const llvm::StringRef &n, bool neg, bool fl);
   Number(Number &n);
 
   TypeID getType() const override;
@@ -126,9 +124,10 @@ struct Number : public Expression {
 struct List : public Expression {
   Ast elements;
 
+  explicit List(const LocationRange &loc);
   List(const LocationRange &loc, Ast &v);
-  List(const List &l)     = delete;
-  List(List &&l) noexcept = default;
+  List(const List &l) = delete;
+  List(List &&l) noexcept;
 
   TypeID getType() const override;
   std::string toString() const override;
@@ -196,6 +195,60 @@ struct Error : public Expression {
 
   static bool classof(const Expression *e);
 };
+
+// ============================================================================
+// Namespace
+// ============================================================================
+struct Namespace : public Expression {
+  using SemanticEnv          = Environment<Node>;
+  using SemanticEnvPtr       = std::unique_ptr<SemanticEnv>;
+  using SemanticEnvironments = std::vector<SemanticEnvPtr>;
+
+  std::string name;
+  std::optional<std::string> filename;
+
+  Ast tree;
+
+  SemanticEnvironments environments;
+
+  Namespace(const LocationRange &loc, llvm::StringRef name);
+  Namespace(const LocationRange &loc, llvm::StringRef name,
+            std::optional<llvm::StringRef> filename);
+  Namespace(Namespace &s) = delete;
+
+  /// Create a new environment with the give \p parent as the parent,
+  /// push the environment to the internal environment storage and
+  /// return a reference to it. The namespace itself is the owner of
+  /// environments.
+  SemanticEnv &createEnv(SemanticEnv *parent);
+
+  /// Return a referenece to the top level (root) environment of ns.
+  SemanticEnv &getRootEnv();
+
+  /// Define a new binding in the root environment with the given \p name
+  /// and the given \p node. Defining a new binding with a name that
+  /// already exists in legal and will overwrite the previous binding and
+  /// the given name will point to a new value from now on.
+  mlir::LogicalResult define(std::string &name, Node &node);
+
+  /// Add the given \p ast to the namespace and return any possible error.
+  /// The given \p ast will be added to a vector of ASTs by expanding
+  /// the tree vector to contain \p ast.
+  ///
+  /// This function runs the semantic analyzer on the \p ast as well.
+  llvm::Error ExpandTree(Ast &ast);
+
+  Ast &getTree();
+
+  TypeID getType() const override;
+  std::string toString() const override;
+
+  ~Namespace() = default;
+
+  static bool classof(const Expression *e);
+};
+
+using MaybeNS = llvm::Expected<std::unique_ptr<Namespace>>;
 
 /// Create a new `node` of type `T` and forwards any given parameter
 /// to the constructor of type `T`. This is the **official way** to create

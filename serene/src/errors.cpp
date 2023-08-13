@@ -32,4 +32,13 @@ std::string getMessage(const llvm::Error &e) {
   os << e;
   return os.str();
 };
+
+llvm::Error make(Type t, const LocationRange &loc, llvm::StringRef msg) {
+  return llvm::make_error<Error>(t, loc, msg);
+}
+
+llvm::Error make(Type t, const LocationRange &loc) {
+  return llvm::make_error<Error>(t, loc);
+}
+
 } // namespace serene::errors

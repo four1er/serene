@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _ERRORS_H
-#define _ERRORS_H
+#ifndef SERENE__ERRORS_H
+#define SERENE__ERRORS_H
 
 #include <string>
 

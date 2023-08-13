@@ -19,11 +19,9 @@ target_sources(serene PRIVATE
 
   commands/commands.cpp
   jit/jit.cpp
-
+  ast/ast.cpp
   reader.cpp
+
   source_mgr.cpp
   errors.cpp
-  ast.cpp
-  namespace.cpp
-
 )

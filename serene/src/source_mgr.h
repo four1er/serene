@@ -19,8 +19,8 @@
 #ifndef SERENE_SOURCE_MGR_H
 #define SERENE_SOURCE_MGR_H
 
+#include "ast/ast.h"
 #include "location.h"
-#include "namespace.h"
 
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/ADT/StringMap.h>
@@ -184,8 +184,7 @@ public:
   ///
   /// \p importLoc is a location in the source code where the give namespace is
   /// imported.
-  MaybeNS readNamespace(jit::JIT &engine, std::string name,
-                        LocationRange importLoc);
+  ast::MaybeNS readNamespace(std::string name, const LocationRange &importLoc);
 };
 
 }; // namespace serene

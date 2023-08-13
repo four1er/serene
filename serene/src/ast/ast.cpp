@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ast.h"
+#include "ast/ast.h"
 
 #include <llvm/Support/FormatVariadic.h>
 
@@ -59,21 +59,16 @@ bool Symbol::classof(const Expression *e) {
 // ============================================================================
 // Number
 // ============================================================================
-Number::Number(const LocationRange &loc, const long &num)
-    : Expression(loc), value(num), isNeg(num < 0), isFloat(false){};
-
-Number::Number(const LocationRange &loc, const double &num)
-    : Expression(loc), value(num), isNeg(num < 0), isFloat(true){};
+Number::Number(const LocationRange &loc, const llvm::StringRef &n, bool neg,
+               bool fl)
+    : Expression(loc), value(n), isNeg(neg), isFloat(fl){};
 
 Number::Number(Number &n) : Expression(n.location) { this->value = n.value; };
 
 TypeID Number::getType() const { return TypeID::NUMBER; };
 
 std::string Number::toString() const {
-  if (isFloat) {
-    return llvm::formatv("<Number {0}{1}>", std::get<double>(value));
-  }
-  return llvm::formatv("<Number {0}{1}>", std::get<long>(value));
+  return llvm::formatv("<Number {0}{1}>", isNeg ? "-" : "", value);
 }
 
 bool Number::classof(const Expression *e) {
@@ -83,9 +78,16 @@ bool Number::classof(const Expression *e) {
 // ============================================================================
 // List
 // ============================================================================
+List::List(const LocationRange &loc) : Expression(loc){};
+
 List::List(const LocationRange &loc, Ast &v) : Expression(loc) {
   this->elements.swap(v);
   v.clear();
+};
+
+List::List(List &&l) noexcept : Expression(l.location) {
+  this->elements.swap(l.elements);
+  l.elements.clear();
 };
 
 TypeID List::getType() const { return TypeID::LIST; };
@@ -163,6 +165,34 @@ std::string Error::toString() const {
 
 bool Error::classof(const Expression *e) {
   return e->getType() == TypeID::KEYWORD;
+};
+
+// ============================================================================
+// Namespace
+// ============================================================================
+Namespace::Namespace(const LocationRange &loc, llvm::StringRef name)
+    : Namespace(loc, name, std::nullopt){};
+Namespace::Namespace(const LocationRange &loc, llvm::StringRef name,
+                     std::optional<llvm::StringRef> filename)
+    : Expression(loc), name(name), filename(filename) {
+  createEnv(nullptr);
+};
+
+Namespace::SemanticEnv &Namespace::createEnv(SemanticEnv *parent) {
+  auto env = std::make_unique<SemanticEnv>(parent);
+  environments.push_back(std::move(env));
+
+  return *environments.back();
+};
+
+TypeID Namespace::getType() const { return TypeID::NS; };
+
+std::string Namespace::toString() const {
+  return llvm::formatv("<NS {0}>", name);
+}
+
+bool Namespace::classof(const Expression *e) {
+  return e->getType() == TypeID::NS;
 };
 
 } // namespace serene::ast

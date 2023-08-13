@@ -37,7 +37,7 @@
 #ifndef NAMESPACE_H
 #define NAMESPACE_H
 
-#include "ast.h"
+#include "ast/ast.h"
 #include "environment.h"
 #include "utils.h"
 

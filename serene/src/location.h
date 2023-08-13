@@ -62,6 +62,8 @@ struct Location {
   static Location UnknownLocation(llvm::StringRef ns) {
     return Location(ns, std::nullopt, nullptr, 0, 0, false);
   }
+
+  ~Location() = default;
 };
 
 class LocationRange {
@@ -74,11 +76,17 @@ public:
   LocationRange(Location _start, Location _end) : start(_start), end(_end){};
   // LocationRange(const LocationRange &);
 
+  LocationRange(LocationRange &lr) : start(lr.start), end(lr.end){};
+
+  LocationRange(const LocationRange &lr) : start(lr.start), end(lr.end){};
+
   bool isKnownLocation() const { return start.knownLocation; };
 
   static LocationRange UnknownLocation(llvm::StringRef ns) {
     return LocationRange(Location::UnknownLocation(ns));
   }
+
+  ~LocationRange() = default;
 };
 
 void incLocation(Location &, const char *);
